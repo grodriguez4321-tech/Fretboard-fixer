@@ -5,6 +5,20 @@ const lab = (() => {
   function stop(){
     version++;cleanup();cleanup=()=>{};haltPlayback();
   }
+  function tile(id,name,summary){
+    const b=button(name,()=>open(id)),view=toolVisual.panel(id);
+    const sample=[{string:2,fret:3},{string:3,fret:4}];
+    switch(id){
+      case 'mic':toolVisual.meter(view,-9,'A2');break;
+      case 'fingers':toolVisual.neck(view,sample);break;
+      case 'rhythm':toolVisual.rhythm(view,[0,1,1.5,2,3],2,[.03,1.05,1.46]);break;
+      case 'earMelody':toolVisual.melody(view,4,[...sample,...sample],2);break;
+      case 'harmony':toolVisual.chords(view,['Am','C']);break;
+      case 'sections':toolVisual.sections(view,Array.from({length:12},(_,i)=>({sourceIndex:i,bar:Math.floor(i/4),beats:1})),4,7,[{first:0,last:3}]);break;
+    }
+    view.surface.setAttribute('aria-hidden','true');
+    b.prepend(view.surface);b.append(element('small',summary));return b;
+  }
   function open(id=''){
     stop();haltPlayback();stopMetro();pauseTimer();document.dispatchEvent(new Event('learningtoolopen'));
     current=id;body.replaceChildren();
@@ -16,8 +30,7 @@ const lab = (() => {
     else {
       const menu=element('div',null,'tool-menu');
       for(const [key,t] of tools){
-        const b=button(t.name,()=>open(key));
-        b.append(element('small',t.summary));menu.append(b);
+        menu.append(tile(key,t.name,t.summary));
       }
       body.append(menu);
     }
@@ -47,7 +60,7 @@ const lab = (() => {
   return {body,dialog,open,stop,button,select,row,fields,status,audioReady,
     add:(id,name,summary,render)=>{
       tools.set(id,{name,summary,render});
-      const tile=button(name,()=>open(id));tile.append(element('small',summary));$('toolTiles').append(tile);
+      $('toolTiles').append(tile(id,name,summary));
     },
     onStop:fn=>{cleanup=fn},token:()=>version};
 })();

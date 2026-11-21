@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
@@ -103,7 +103,9 @@ await page.click('#loop');await page.click('#restart');await page.click('#play')
 await page.waitForFunction(()=>document.getElementById('play').textContent.includes('Replay'));
 await page.click('#saveBest');
 assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fretboard-v2')).bests['chromatic-bar1']),180);
-await nav('Tools');await page.click('#metroBtn');assert.equal(await page.locator('#metroBtn').innerText(),'Stop click');
+await nav('Tools');await page.click('#metroBtn');
+assert.deepEqual(await page.locator('#dots .dot').allTextContents(),['1','2','3','4']);
+assert.equal(await page.locator('#dots .lit').count(),1);assert.equal(await page.locator('#metroBtn').innerText(),'Stop click');
 await choose('chromatic');await page.click('#play');assert.equal(await page.locator('#metroBtn').innerText(),'Start click');
 await choose('ear');
 await page.getByRole('button',{name:'Hear a pair'}).click();
@@ -194,6 +196,8 @@ await page.click('#undoNote');await page.click('#addRest');
 await page.click('#closeRiff');await page.reload();await nav('Tools');await page.click('#newRiff');
 assert.equal(await page.locator('#riffName').inputValue(),'B-string 10–9');
 assert.equal(await page.locator('#draftNotes button').count(),5);
+assert.equal(await page.locator('#riffRibbon .riff-measure').count(),2);
+assert.equal(await page.locator('#riffRibbon .rest').count(),1);
 await page.locator('#draftNotes button').first().click();await page.click('#replaceNote');
 await page.selectOption('#riffWindow','6');await fretButton(10).click();
 await page.click('#saveRiff');
@@ -237,6 +241,8 @@ assert.equal(await page.locator('#lesson').inputValue(),riffId);
 assert.equal(await page.locator('#phrase').inputValue(),'notes-2-4');
 assert.equal(await page.locator('#speed').innerText(),'180 BPM');
 await page.click('#copyRiff');assert.equal(await page.locator('#draftNotes button').count(),5);
+assert.equal(await page.locator('#riffRibbon .riff-measure').count(),2);
+assert.equal(await page.locator('#riffRibbon .rest').count(),1);
 await page.locator('#draftNotes button').last().click();await page.click('#deleteNote');
 assert.equal(await page.locator('#draftNotes button').count(),4);await page.click('#saveRiff');
 assert.notEqual(await page.locator('#lesson').inputValue(),riffId);
