@@ -20,9 +20,9 @@ lab.add('rhythm','Rhythm trainer','Tap a pattern, see early and late hits, or ke
   const bpm=lab.select('Tempo',[45,60,75,90,120].map(v=>[v,v+' BPM']),60);
   const info=lab.status(),result=element('div'),pad=lab.button('Tap here',()=>{},'tap-pad');
   let expected=[],hits=[],start=0,end=0,beat=1,timers=[],run=0;
-  let step=-1,clockOrigin=0;
+  let step=-1,clockOrigin=0,pointerHandled=false;
   const drawGrid=()=>toolVisual.rhythm(view,patterns[Number(pattern.input.value)].beats,step,hits.map(t=>(t-start)/beat));
-  function clear(){step=-1;hits=[];drawGrid();run++;timers.forEach(clearTimeout);timers=[];silence();expected=[];pad.disabled=true}
+  function clear(){pointerHandled=false;step=-1;hits=[];drawGrid();run++;timers.forEach(clearTimeout);timers=[];silence();expected=[];pad.disabled=true}
   function tap(event){
     if(event?.repeat || !expected.length)return;
     // Anchor input to the same instant as the scheduled bar. Some WebKit
@@ -35,9 +35,11 @@ lab.add('rhythm','Rhythm trainer','Tap a pattern, see early and late hits, or ke
     const usable=stamp?.contextTime>0 && stamp.performanceTime>0 && Math.abs(now-stamp.performanceTime)<300 && Math.abs(outputTime-scheduledTime)<.15;
     const t=usable ? outputTime : scheduledTime;
     if(t<start-beat*.35 || t>end)return;
-    hits.push(t);drawGrid();pad.textContent='Tap · '+hits.length;
+    hits.push(t);drawGrid();pad.textContent='Tap · '+hits.length;return true;
   }
-  pad.onpointerdown=tap;pad.onclick=e=>{if(e.detail===0)tap(e)};
+  pad.onpointerdown=e=>{if(e.isPrimary && e.button===0)pointerHandled=!!tap(e)};
+  pad.onpointercancel=()=>{pointerHandled=false};
+  pad.onclick=e=>{if(!pointerHandled)tap(e);pointerHandled=false};
   function finish(){
     step=-1;drawGrid();
     const {offsets,missed,extra}=scoreTaps(expected,hits,beat);
