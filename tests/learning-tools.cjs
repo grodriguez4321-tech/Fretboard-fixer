@@ -14,7 +14,7 @@ module.exports=async function(page,assert,choose,nav){
       assert.ok(await graph.isVisible(),name+' diagram');
       if(name==='Alternate fingerings' || name==='Song-section map'){
         const size=await box.locator('.touch-fret').first().boundingBox();
-        assert.ok(size.width>=44 && size.height>=44,name+' tap target at '+width);
+        assert.ok(size.width>=44 && size.height>=44,name+' tap target at '+width+' measured '+JSON.stringify(size));
       }
       assert.ok((await graph.getAttribute('aria-label')).length>4);
       assert.ok(await box.evaluate(d=>d.scrollWidth<=d.clientWidth+1),name+' width '+width);
