@@ -244,7 +244,8 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 /* The bitmap, number strip and six rows of targets move as one piece. */
 .guitar-neck{max-width:100%;min-width:0;margin-block:10px 6px}
 .neck-frame{display:flex;align-items:flex-start;overflow:hidden;border-radius:10px;border:1px solid #544a3f;background:#211d19}
-.neck-scroll{min-width:0;flex:1;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-color:#aa9479 #302821;user-select:none;-webkit-user-select:none}
+.neck-scroll{min-width:0;flex:1;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;user-select:none;-webkit-user-select:none}
+.neck-scroll::-webkit-scrollbar{display:none}
 .neck-track{display:grid;width:max-content;grid-template-rows:28px repeat(6,44px);background:#38271e url('rosewood-neck.webp') left bottom / 100% 264px no-repeat}
 .tuning-rail{flex:none;width:26px;display:grid;grid-template-rows:28px repeat(6,44px);text-align:center;background:#2c2823;color:#eee5d4;box-shadow:inset -1px 0 #736453}
 .neck-number,.tuning-rail>*{display:grid;place-items:center;font:650 .79rem var(--mono)}

@@ -188,14 +188,14 @@ async function audition(event) {
   if(await enableAudio() && token===generation) sound(event,audio.currentTime,.6);
 }
 function seek(index, listen=false) {
-  haltPlayback();finished=false;cursor=index;paint();
+  haltPlayback();finished=false;cursor=index;lastNeckEvent=null;paint();
   if(listen){stopMetro();audition(sequence[index])}
 }
 async function play() {
   if(playing){haltPlayback();return}
   stopMetro();haltPlayback();
   if(finished)cursor=0;
-  finished=false;playing=true;
+  finished=false;playing=true;lastNeckEvent=null;
   const token=generation;
   paint();
   const audible=await enableAudio();

@@ -83,6 +83,14 @@ for(const level of ['1','2','3','0']){
 await page.selectOption('#phrase','1');
 assert.match(await page.locator('#placement').innerText(),/fret 8/);
 await page.click('#step');assert.match(await page.locator('#placement').innerText(),/fret 7/);
+const lessonScroll=page.locator('#neck .neck-scroll');
+await page.locator('#neck input[type=range]').focus();await page.keyboard.press('End');
+await page.click('#play');
+assert.ok(await lessonScroll.evaluate(el=>{
+  const key=el.querySelector('.selected').getBoundingClientRect(),viewport=el.getBoundingClientRect();
+  return key.left>=viewport.left-1 && key.right<=viewport.right+1;
+}),'starting playback brings the current note back after exploring');
+await page.click('#play');
 await page.click('#restart');await page.click('#loop');
 await page.evaluate(()=>{
   window.audioEvents=[];
