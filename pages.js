@@ -2,7 +2,7 @@
 (() => {
   const panels={practice:$('practicePage'),exercise:$('studio'),tools:$('toolsPage'),journal:$('journal')};
   const headings={practice:$('practiceTitle'),exercise:$('lessonTitle'),tools:$('toolsTitle'),journal:$('journalTitle')};
-  let current='',applying=false,lastDay=dayKey(),feedback='',returnTo='';
+  let current='',applying=false,lastDay=dayKey(),feedback='',returnTo='',undo=null;
   function decodeRoute(){
     const hash=location.hash.slice(1);
     if(hash.startsWith('exercise/') && lessonById(hash.slice(9)))return hash;
@@ -18,6 +18,7 @@
     }
     current=route;
     document.title=headings[page].textContent+' · Fretboard Fixer';
+    if(page!=='practice'){undo=null;$('undoDone').hidden=true}
     if(page==='practice'){
       $('finishNotice').textContent=feedback;render();feedback='';
     }
@@ -68,13 +69,24 @@
   $('complete').onclick=()=>{
     const day=dayKey();
     store.dailyDone??={};
-    (store.dailyDone[day]??={})[active.id]=true;
+    const today=store.dailyDone[day]??={};
+    undo=today[active.id] ? null : {id:active.id,day,previous:store.done[active.id]};
+    $('undoDone').hidden=!undo;
+    today[active.id]=true;
     store.done[active.id]=true;store.days[day]=true;save();
     feedback=active.name+' completed.';navigate('practice',true);
   };
+  $('undoDone').onclick=()=>{
+    if(!undo || undo.day!==dayKey())return;
+    delete store.dailyDone[undo.day][undo.id];
+    if(undo.previous===undefined)delete store.done[undo.id];else store.done[undo.id]=undo.previous;
+    const id=undo.id;undo=null;$('undoDone').hidden=true;save();render();
+    $('finishNotice').textContent='Completion undone.';
+    document.querySelector('.exercise-row[data-lesson="'+id+'"]')?.focus({preventScroll:true});
+  };
   function refreshDate(){
     if(dayKey()===lastDay)return;
-    lastDay=dayKey();$('finishNotice').textContent='';render();
+    lastDay=dayKey();undo=null;$('undoDone').hidden=true;$('finishNotice').textContent='';render();
   }
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDate()});
   window.addEventListener('pageshow',refreshDate);

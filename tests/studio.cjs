@@ -108,6 +108,8 @@ assert.ok(await page.evaluate(()=>store.times.findnotes>0));
 await page.evaluate(()=>{remaining=.05});await page.click('#timerBtn');await page.waitForTimeout(300);
 assert.equal(await page.locator('#timer').innerText(),'00:00');assert.equal(await page.locator('#doneCount').innerText(),'1/11');
 await page.click('#complete');assert.ok(await page.locator('#practicePage').isVisible());assert.equal(await page.locator('#todayCount').innerText(),'1 of 11 done');
+await page.click('#undoDone');assert.equal(await page.locator('#todayCount').innerText(),'0 of 11 done');
+await choose('findnotes');await page.click('#complete');
 await choose('findnotes');await page.click('#complete');assert.equal(await page.locator('#todayCount').innerText(),'1 of 11 done');assert.equal(await page.locator('#doneCount').innerText(),'2/11');
 await nav('Journal');await page.locator('#notes').fill('Test journal');const dl=page.waitForEvent('download');await page.click('#export');
 const download=await dl;const contents=JSON.parse(fs.readFileSync(await download.path()));
