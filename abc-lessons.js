@@ -43,6 +43,7 @@ function compileAbc(text){
   let bar=[],accidental=new Map(),tupleCount=0,factor=1,tie=null,slur=false,slurStart=false,last=null,ordinal=0;
   // The source may specify a physical guitar position for a slurred gesture.
   const bStringHint=comments.some(c=>/B string 10 to 8/i.test(c));
+  const pullOffHint=comments.join(' ').match(/pull-off\s*\((\d+) to (\d+)\)/i);
   let anchor=bStringHint?8:2;
   const pitchSyntax=/^([_=^]?)([A-Ga-g])([,']*)/;
   function readPitch(token){
@@ -89,6 +90,11 @@ function compileAbc(text){
         if(bStringHint && prev.string===2 && prev.fret===10 && fret===8){action='Slide';from=prev.fret}
         else action=fret<prev.fret?'Pull-off':fret>prev.fret?'Hammer-on':'Pick';
       }
+    }
+    // A source comment can specify a pull-off even when its slur ends early.
+    if(!tie && pullOffHint && action==='Pick' && positions.length===1 && last?.positions.length===1){
+      const prev=last.positions[0],next=positions[0];
+      if(prev.string===next.string && prev.fret===Number(pullOffHint[1]) && next.fret===Number(pullOffHint[2]) && next.fret<prev.fret)action='Pull-off';
     }
     if(positions.length===1 && positions[0].fret)anchor=positions[0].fret;
     const e={positions,beats,action,from,names:notes.map(n=>n.label),midis:notes.map(n=>n.midi),sourceIndex:tie?tie.sourceIndex:ordinal++,continuation:!!tie};

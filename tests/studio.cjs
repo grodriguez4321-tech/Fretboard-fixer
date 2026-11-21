@@ -312,6 +312,8 @@ assert.deepEqual(await page.evaluate(()=>score().bars[1].map(e=>e.midis[0])),[66
 await page.locator('#noteBars button').nth(1).click();assert.equal(await page.locator('#phrase').inputValue(),'1');
 await page.click('#complete');assert.ok(await page.locator('#songsPage').isVisible());await page.reload();
 assert.equal(await page.locator('#songList .is-done').count(),1);
+const explicitPull=await page.evaluate(()=>compileAbc('X:1\nT:Descending study\nM:4/4\nL:1/4\nQ:1/4=72\nK:none\n% pull-off (2 to 0)\n^F E z2 |]').bars[0].map(e=>e.action));
+assert.deepEqual(explicitPull,['Pick','Pull-off','Rest']);
 const packed=require('node:zlib').gzipSync(JSON.stringify([sample,sample.replace('Test study','Second study')])).toString('base64url');
 await page.goto(page.url().split('#')[0]+'#songbook='+packed);await page.getByText('2 song lessons ready on this device.').waitFor();
 assert.equal(await page.locator('#songList a').count(),2);assert.equal(new URL(page.url()).hash,'#songs');
