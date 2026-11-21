@@ -232,6 +232,7 @@ async function play() {
 function rebuildPhrase() {
   haltPlayback();cursor=0;finished=false;barShown=-1;
   sequence=makeSequence(score().bars,$('phrase').value);paint();showLog();
+  document.dispatchEvent(new Event('practicephrasechange'));
 }
 function showLog() {
   $('complete').textContent=store.done[active.id]?'Mark incomplete':'Mark complete';
