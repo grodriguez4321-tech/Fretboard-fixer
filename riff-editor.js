@@ -3,7 +3,7 @@
   let draft=[],selected=-1,replacing=false,undo=[];
   function persistDraft() {
     store.riffDraft={name:$('riffName').value,events:draft};
-    save();
+    save();refreshPreview();
   }
   function entryLabel(e) {
     return (e.string ? stringNames[e.string-1]+' '+e.fret : 'Rest')+' · '+e.beats+(e.beats===1?' beat':' beats');
@@ -28,12 +28,15 @@
       ribbon.append(empty);
     }
   }
-  drawRibbon($('riffPreview'),(store.riffDraft?.events||[]).filter(validRiffEvent),-1,true);
+  function refreshPreview(){
+    const events=store.riffDraft?.events;
+    drawRibbon($('riffPreview'),Array.isArray(events)?events.filter(validRiffEvent):[],-1,true);
+  }
+  refreshPreview();
   function redraw(message) {
     const list=$('draftNotes');
     list.replaceChildren();
     drawRibbon($('riffRibbon'),draft,selected);
-    drawRibbon($('riffPreview'),draft,-1,true);
     draft.forEach((e,i)=>{
       const button=element('button',(i+1)+'. '+entryLabel(e));
       button.setAttribute('aria-pressed',String(i===selected));
@@ -109,7 +112,7 @@
     try{save()}catch{
       store.riffs.pop();store.riffDraft=previousDraft;redraw('Device storage is full. Your draft is still open.');return;
     }
-    registerRiff(riff);refreshRiffPicker();dialog.close();openLesson(lessonById(riff.id));
+    refreshPreview();registerRiff(riff);refreshRiffPicker();dialog.close();openLesson(lessonById(riff.id));
     $('studio').scrollIntoView();$('lessonTitle').focus({preventScroll:true});
   };
 })();
