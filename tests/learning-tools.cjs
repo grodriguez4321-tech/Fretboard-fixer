@@ -2,6 +2,7 @@ module.exports=async function(page,assert,choose,nav){
   const box=page.locator('#labDialog'),button=(name)=>box.getByRole('button',{name,exact:true});
   async function open(name){
     if(await box.isVisible())await page.click('#labBack');else await page.click('#exerciseTools');
+    if(!['Alternate fingerings','Song-section map'].includes(name))await box.locator('.more-tools summary').click();
     await box.getByRole('button',{name:new RegExp('^'+name)}).click();
   }
   const close=()=>page.click('#labClose');
@@ -11,18 +12,25 @@ module.exports=async function(page,assert,choose,nav){
       await open(name);
       const graph=box.locator('#labBody > .tool-visual svg');
       assert.ok(await graph.isVisible(),name+' diagram');
+      if(name==='Alternate fingerings' || name==='Song-section map'){
+        const size=await box.locator('.touch-fret').first().boundingBox();
+        assert.ok(size.width>=44 && size.height>=44,name+' tap target at '+width+' measured '+JSON.stringify(size));
+      }
       assert.ok((await graph.getAttribute('aria-label')).length>4);
       assert.ok(await box.evaluate(d=>d.scrollWidth<=d.clientWidth+1),name+' width '+width);
     }
     await close();
   }
   await open('Alternate fingerings');
-  await box.getByLabel('First string').selectOption('2');await box.getByLabel('First fret').selectOption('10');
+  const cell=(string,fret)=>box.locator('.touch-fret[data-string="'+string+'"][data-fret="'+fret+'"]');
+  await cell(6,0).click();assert.equal(await box.locator('h3').innerText(),'E2');
+  await button('Frets 21 to 24').click();await cell(1,24).click();
+  assert.equal(await box.locator('h3').innerText(),'E6');
+  await button('Frets 9 to 12').click();await cell(2,10).click();
   assert.ok(await button('high E string · fret 5').isVisible());
   await button('high E string · fret 5').click();
   assert.equal(await box.locator('svg').getAttribute('aria-label'),'high E string · fret 5');
-  await box.getByLabel('Explore').selectOption('pair');
-  await box.getByLabel('Second string').selectOption('1');await box.getByLabel('Second fret').selectOption('3');
+  await button('Two notes').click();await button('Frets 1 to 4').click();await cell(1,3).click();
   assert.match(await box.locator('h3').innerText(),/A4 \+ G4/);
   assert.ok(await box.getByRole('button',{name:/span/}).count()>0);
   await close();
@@ -88,12 +96,17 @@ module.exports=async function(page,assert,choose,nav){
   await open('Song-section map');await box.getByLabel('Song or saved riff').selectOption('song');
   await button('Bar 2').click();
   assert.match(await box.locator('svg').getAttribute('aria-label'),/Notes 5 through/);
-  async function section(name,a,b){
-    await box.getByLabel('Section name').fill(name);await box.getByLabel('First note').selectOption(a);
-    await box.getByLabel('Last note').selectOption(b);await box.getByLabel('Practice BPM').selectOption('65');
+  async function saveSection(name){
+    await box.getByLabel('Section name').fill(name);await box.getByLabel('Practice BPM').selectOption('65');
     await button('Save section').click();
   }
-  await section('Intro','0','1');await section('Answer','3','4');
+  await button('Bar 1').click();await cell(2,5).click();
+  await box.locator('.note-occurrences').getByRole('button',{name:/Bar 1 · Note 1/}).click();
+  await cell(2,7).click();await box.locator('.note-occurrences').getByRole('button',{name:/Bar 1 · Note 2/}).click();
+  await saveSection('Intro');
+  await box.getByRole('button',{name:/^Start ·/}).click();await button('Choose rest').click();
+  await cell(2,7).click();await box.locator('.note-occurrences').getByRole('button',{name:/Bar 2 · Note 5/}).click();
+  await saveSection('Answer');
   await button('Practice Intro').click();assert.equal(await page.locator('#phrase').inputValue(),'notes-0-1');
   await page.click('#saveBest');await open('Song-section map');await box.getByText(/clean best 65 BPM/).waitFor();
   await button('Intro into Answer').click();assert.deepEqual(await page.evaluate(()=>sequence.map(n=>n.sourceIndex)),[1,3]);

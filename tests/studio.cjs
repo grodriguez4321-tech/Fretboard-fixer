@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
@@ -18,6 +18,9 @@ page.on('pageerror',e=>errors.push(String(e)));
 await page.addInitScript(()=>{if(location.protocol==='http:' && !localStorage.getItem('fretboard-v2'))localStorage.setItem('fretboard-v2',JSON.stringify({notes:'Old notes',days:{'2026-11-20':true},times:{ear:125},done:{ear:true}}))});
 await page.goto('http://127.0.0.1:'+server.address().port);
 assert.equal(await page.locator('#notes').inputValue(),'Old notes');
+async function moreTools(){
+  if(!await page.locator('#moreTools').evaluate(d=>d.open))await page.locator('#moreTools summary').click();
+}
 const nav=async name=>{
   await page.locator('.brandbar nav').getByRole('link',{name,exact:true}).click();
   const panels={Practice:'#practicePage',Songs:'#songsPage',Tools:'#toolsPage',Journal:'#journal'};
@@ -103,7 +106,7 @@ await page.click('#loop');await page.click('#restart');await page.click('#play')
 await page.waitForFunction(()=>document.getElementById('play').textContent.includes('Replay'));
 await page.click('#saveBest');
 assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fretboard-v2')).bests['chromatic-bar1']),180);
-await nav('Tools');await page.click('#metroBtn');
+await nav('Tools');assert.equal(await page.locator('#toolTiles button').count(),2);assert.ok(await page.locator('#otherTiles').isHidden());await moreTools();await page.click('#metroBtn');
 assert.deepEqual(await page.locator('#dots .dot').allTextContents(),['1','2','3','4']);
 assert.equal(await page.locator('#dots .lit').count(),1);assert.equal(await page.locator('#metroBtn').innerText(),'Stop click');
 await choose('chromatic');await page.click('#play');assert.equal(await page.locator('#metroBtn').innerText(),'Start click');
@@ -185,7 +188,7 @@ await page.keyboard.press('Escape');
 assert.equal(await page.locator('#recallDialog').isVisible(),false);
 console.log('PASS phrase training, repair, tempo change, cue-free recall, delayed review, target restoration and phone dialog.');
 
-await nav('Tools');await page.click('#newRiff');
+await nav('Tools');await moreTools();await page.click('#newRiff');
 await page.fill('#riffName','B-string 10–9');
 await page.selectOption('#riffWindow','6');
 const fretButton=n=>page.getByRole('button',{name:'Add B string fret '+n,exact:true});
@@ -193,7 +196,7 @@ for(const fret of [10,9,10])await fretButton(fret).click();
 await page.selectOption('#riffLength','2');await fretButton(9).click(); // beats 4 to 1 of bar two
 await page.selectOption('#riffLength','0.5');await page.click('#addRest');
 await page.click('#undoNote');await page.click('#addRest');
-await page.click('#closeRiff');await page.reload();await nav('Tools');await page.click('#newRiff');
+await page.click('#closeRiff');await page.reload();await nav('Tools');await moreTools();await page.click('#newRiff');
 assert.equal(await page.locator('#riffName').inputValue(),'B-string 10–9');
 assert.equal(await page.locator('#draftNotes button').count(),5);
 assert.equal(await page.locator('#riffRibbon .riff-measure').count(),2);
@@ -254,7 +257,7 @@ await page.locator('#rangeTool').evaluate(el=>el.open=true);
 await page.selectOption('#rangeFirst','3');await page.selectOption('#rangeLast','4');await page.click('#applyRange');
 assert.deepEqual(await page.evaluate(()=>sequence.map(e=>e.bar)),[0,1]);
 for(const width of [320,390,768,1440]){
-  await page.setViewportSize({width,height:800});await nav('Tools');await page.click('#newRiff');
+  await page.setViewportSize({width,height:800});await nav('Tools');await moreTools();await page.click('#newRiff');
   assert.ok(await page.locator('#riffDialog').evaluate(d=>d.scrollWidth<=d.clientWidth+1));
   await page.click('#closeRiff');
   const overflow=await page.evaluate(()=>{

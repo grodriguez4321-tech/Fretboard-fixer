@@ -107,14 +107,18 @@ lab.add('mic','Acoustic note check','Play one note into your microphone. Match t
 lab.add('fingers','Alternate fingerings','Find the same pitch elsewhere or compare ways to fret two notes together.',()=>{
   const e=sequence[cursor], first=e.positions[0] || {string:1,fret:5};
   const second=e.positions[1] || sequence[cursor+1]?.positions[0] || {string:2,fret:3};
-  const mode=lab.select('Explore',[['one','One pitch'],['pair','Two simultaneous notes']],'one');
-  function inputFor(label,p){
-    const strings=lab.select(label+' string',stringNames.map((s,i)=>[i+1,s]),p.string);
-    const frets=lab.select(label+' fret',Array.from({length:25},(_,i)=>[i,i]),p.fret);
-    return {row:lab.fields(strings.box,frets.box),get:()=>tuning[Number(strings.input.value)-1]+Number(frets.input.value)};
-  }
+  let pair=false,slot=0;
+  const picked=[first,second],out=element('div',null,'position-results');
+  const positionsRow=lab.row(),one=lab.button('One note',()=>setMode(false)),two=lab.button('Two notes',()=>setMode(true));
+  const slots=[0,1].map(i=>lab.button('',()=>{slot=i;refresh(picked[i].fret)}));
+  positionsRow.append(...slots);
+  const board=fretPicker(p=>{
+    picked[slot]=p;silence();audition(note(p.string,p.fret,null));
+    if(pair && slot===0)slot=1;
+    refresh();
+  });
   const view=toolVisual.panel('fingers');
-  const a=inputFor('First',first),b=inputFor('Second',second),out=element('div');
+  function setMode(on){pair=on;slot=on?1:0;refresh(picked[slot].fret)}
   function option(positions,text,selected){
     const b=lab.button(text,()=>{
       out.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===b)));
@@ -123,13 +127,19 @@ lab.add('fingers','Alternate fingerings','Find the same pitch elsewhere or compa
     b.setAttribute('aria-pressed',String(selected));out.append(b);
     if(selected)toolVisual.neck(view,positions);
   }
-  function refresh(){
-    const pair=mode.input.value==='pair';
-    b.row.hidden=!pair;out.replaceChildren();
-    const targets=[a.get(),b.get()];
+  function refresh(showFret){
+    one.setAttribute('aria-pressed',String(!pair));two.setAttribute('aria-pressed',String(pair));
+    positionsRow.hidden=!pair;
+    for(const [i,b] of slots.entries()){
+      b.textContent='Note '+(i+1)+' · '+locationName(picked[i]);
+      b.setAttribute('aria-pressed',String(slot===i));
+    }
+    out.replaceChildren();
+    const targets=picked.map(p=>tuning[p.string-1]+p.fret);
+    board.update(picked.slice(0,pair?2:1),null,showFret,pair?[]:pitchPositions(targets[0]));
     out.append(element('h3',pair ? targets.map(midiName).join(' + ') : midiName(targets[0])));
     if(!pair){
-      for(const p of pitchPositions(targets[0]))option([p],locationName(p),p.string===Number(a.row.querySelector('select').value));
+      for(const p of pitchPositions(targets[0]))option([p],locationName(p),p.string===picked[0].string);
       return;
     }
     const options=[];
@@ -144,6 +154,6 @@ lab.add('fingers','Alternate fingerings','Find the same pitch elsewhere or compa
     if(!options.length)out.append(element('p','These pitches cannot sound simultaneously on separate strings within frets 0–24.'));
     for(const [i,{p,q,span}] of options.slice(0,5).entries())option([p,q],locationName(p)+' + '+locationName(q)+' · span '+span,i===0);
   }
-  lab.body.append(view.surface,element('p','Choose a string and fret. Tap a result to hear it. For pairs, span counts the distance between fretted notes. Open strings need no fretting finger.'),mode.box,a.row,b.row,out);
-  lab.body.onchange=refresh;lab.onStop(()=>{lab.body.onchange=null});refresh();
+  lab.body.append(lab.row(one,two),positionsRow,element('p','Tap where you play. Outlined notes show other places to play the same pitch in one-note mode.'),board.root,out,view.surface);
+  refresh(first.fret);
 });
