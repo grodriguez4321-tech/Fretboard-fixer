@@ -20,13 +20,20 @@ lab.add('rhythm','Rhythm trainer','Tap a pattern, see early and late hits, or ke
   const bpm=lab.select('Tempo',[45,60,75,90,120].map(v=>[v,v+' BPM']),60);
   const info=lab.status(),result=element('div'),pad=lab.button('Tap here',()=>{},'tap-pad');
   let expected=[],hits=[],start=0,end=0,beat=1,timers=[],run=0;
-  let step=-1;
+  let step=-1,clockOrigin=0;
   const drawGrid=()=>toolVisual.rhythm(view,patterns[Number(pattern.input.value)].beats,step,hits.map(t=>(t-start)/beat));
   function clear(){step=-1;hits=[];drawGrid();run++;timers.forEach(clearTimeout);timers=[];silence();expected=[];pad.disabled=true}
   function tap(event){
     if(event?.repeat || !expected.length)return;
+    // Anchor input to the same instant as the scheduled bar. Some WebKit
+    // outputs expose a zero or stale device timestamp, especially on resume.
+    const now=performance.now();
+    const inputTime=event?.timeStamp>0 && Math.abs(event.timeStamp-now)<1000 ? event.timeStamp : now;
+    const scheduledTime=clockOrigin+inputTime/1000;
     const stamp=audio.getOutputTimestamp?.();
-    const t=stamp?.performanceTime>0 && event?.timeStamp>0 && Math.abs(event.timeStamp-performance.now())<300 ? stamp.contextTime+(event.timeStamp-stamp.performanceTime)/1000 : audio.currentTime;
+    const outputTime=stamp?.contextTime+(inputTime-stamp?.performanceTime)/1000;
+    const usable=stamp?.contextTime>0 && stamp.performanceTime>0 && Math.abs(now-stamp.performanceTime)<300 && Math.abs(outputTime-scheduledTime)<.15;
+    const t=usable ? outputTime : scheduledTime;
     if(t<start-beat*.35 || t>end)return;
     hits.push(t);drawGrid();pad.textContent='Tap · '+hits.length;
   }
@@ -43,7 +50,8 @@ lab.add('rhythm','Rhythm trainer','Tap a pattern, see early and late hits, or ke
     if(!await lab.audioReady(info) || id!==run)return;
     result.replaceChildren();hits=[];beat=60/Number(bpm.input.value);
     const p=patterns[Number(pattern.input.value)],t=audio.currentTime+.12;
-    const at=(time,fn)=>timers.push(setTimeout(()=>{if(id===run)fn()},Math.max(0,1000*(time-audio.currentTime))));
+    clockOrigin=audio.currentTime-performance.now()/1000;
+    const at=(time,fn)=>timers.push(setTimeout(()=>{if(id===run)fn()},Math.max(0,1000*(time-clockOrigin)-performance.now())));
     const click=(time,accent)=>voice(accent?980:710,.045,time,.11,null,'sine');
     for(let i=0;i<4;i++)click(t+i*beat,i===0);
     start=t+4*beat;end=start+4*beat;

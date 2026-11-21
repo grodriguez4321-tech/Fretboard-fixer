@@ -52,7 +52,7 @@ const toolVisual = (() => {
     }
   }
   function rhythm(view,beats,step=-1,hits=[]){
-    const s=view.reset('Beat grid','Count 1 and 2 and 3 and 4 and. Play at '+beats.map(b=>b+1).join(', ')+(hits.length?'. '+hits.length+' taps recorded':''),94);
+    const s=view.reset('Beat grid','Count 1 and 2 and 3 and 4 and. Play at '+beats.map(b=>b+1).join(', ')+(hits.length?'. '+hits.length+(hits.length===1?' tap recorded':' taps recorded'):''),94);
     const x=b=>20+35*b*2;
     for(let i=0;i<8;i++){
       const beat=i/2, on=beats.includes(beat);

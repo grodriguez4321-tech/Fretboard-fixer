@@ -71,7 +71,7 @@ module.exports=async function(page,assert,choose,nav){
   await box.getByLabel('Tempo').selectOption('120');await box.getByLabel('Test click').selectOption('gap');
   await button('Start tap test').click();await box.getByText(/Your turn/).waitFor();
   await button('Tap here').click();await box.getByText(/hits matched/).waitFor();
-  assert.match(await box.locator('svg').getAttribute('aria-label'),/1 taps recorded/);
+  assert.match(await box.locator('svg').getAttribute('aria-label'),/1 tap recorded/);
 
   await open('Melody by ear');
   await page.evaluate(()=>{window.realRandom=Math.random;Math.random=()=>0});
