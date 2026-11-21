@@ -13,9 +13,9 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 let browser;
 try{
 browser=await engines[process.argv[2] || 'chromium'].launch();
-const page=await browser.newPage();const errors=[];
+let page=await browser.newPage();const errors=[];
 page.on('pageerror',e=>errors.push(String(e)));
-await page.addInitScript(()=>{if(!localStorage.getItem('fretboard-v2'))localStorage.setItem('fretboard-v2',JSON.stringify({notes:'Old notes',days:{'2026-11-20':true},times:{ear:125},done:{ear:true}}))});
+await page.addInitScript(()=>{if(location.protocol==='http:' && !localStorage.getItem('fretboard-v2'))localStorage.setItem('fretboard-v2',JSON.stringify({notes:'Old notes',days:{'2026-11-20':true},times:{ear:125},done:{ear:true}}))});
 await page.goto('http://127.0.0.1:'+server.address().port);
 assert.equal(await page.locator('#notes').inputValue(),'Old notes');
 const nav=async name=>{
@@ -280,7 +280,19 @@ await page.click('#step');
 assert.ok(await page.locator('.fret.selected').count()>0);
 await page.keyboard.press('Escape');
 assert.ok(await page.locator('#studio .lesson-head').isVisible());
+// Start each remaining suite in a fresh tab with the same saved practice data.
+async function reopenInFreshContext(url){
+  const oldContext=page.context();
+  const saved=await oldContext.storageState();
+  const context=await browser.newContext({storageState:saved});
+  page=await context.newPage();
+  page.on('pageerror',e=>errors.push(String(e)));
+  await page.goto(url);
+  await oldContext.close();
+}
+await reopenInFreshContext(page.url());
 await require('./learning-tools.cjs')(page,assert,choose,nav);
+await reopenInFreshContext(page.url().split('#')[0]+'#practice');
 await nav('Practice');
 await page.reload();assert.equal(await page.locator('#todayCount').innerText(),'1 of 11 done');
 const tomorrow=await page.evaluate(()=>{const d=new Date();d.setDate(d.getDate()+1);return d.getTime()});

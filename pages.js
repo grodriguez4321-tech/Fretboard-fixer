@@ -21,7 +21,9 @@
     }
     current=route;
     document.title=headings[page].textContent+' · Fretboard Fixer';
-    if(page!=='practice' && page!=='songs'){undo=null;$('undoDone').hidden=true}
+    if(undo && page!==(songLessons.has(undo.id)?'songs':'practice'))undo=null;
+    $('undoDone').hidden=!undo || page!=='practice';
+    $('undoSong').hidden=!undo || page!=='songs';
     if(page==='songs'){render();if(feedback)$('abcStatus').textContent=feedback;feedback=''}
     if(page==='practice'){
       $('finishNotice').textContent=feedback;render();feedback='';
