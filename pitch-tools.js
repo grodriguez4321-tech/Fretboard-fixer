@@ -117,15 +117,16 @@ lab.add('fingers','Alternate fingerings','Find the same pitch elsewhere or compa
     if(pair && slot===0)slot=1;
     refresh();
   });
-  const view=toolVisual.panel('fingers');
+  const preview=lab.status();
   function setMode(on){pair=on;slot=on?1:0;refresh(picked[slot].fret)}
   function option(positions,text,selected){
     const b=lab.button(text,()=>{
       out.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===b)));
-      toolVisual.neck(view,positions);silence();audition({positions,beats:1,action:'Pick'});
+      board.update(positions,null,positions[0]?.fret,pair?[]:pitchPositions(tuning[picked[0].string-1]+picked[0].fret));
+      preview.textContent=positions.map(locationName).join(' + ');silence();audition({positions,beats:1,action:'Pick'});
     });
     b.setAttribute('aria-pressed',String(selected));out.append(b);
-    if(selected)toolVisual.neck(view,positions);
+    if(selected)preview.textContent=positions.map(locationName).join(' + ');
   }
   function refresh(showFret){
     one.setAttribute('aria-pressed',String(!pair));two.setAttribute('aria-pressed',String(pair));
@@ -150,10 +151,10 @@ lab.add('fingers','Alternate fingerings','Find the same pitch elsewhere or compa
       options.push({p,q,span,high:Math.max(0,...fretted)});
     }
     options.sort((x,y)=>x.span-y.span || x.high-y.high);
-    if(!options.length)toolVisual.neck(view,[]);
+    preview.textContent='';
     if(!options.length)out.append(element('p','These pitches cannot sound simultaneously on separate strings within frets 0–24.'));
-    for(const [i,{p,q,span}] of options.slice(0,5).entries())option([p,q],locationName(p)+' + '+locationName(q)+' · span '+span,i===0);
+    for(const {p,q,span} of options.slice(0,5))option([p,q],locationName(p)+' + '+locationName(q)+' · span '+span,p.string===picked[0].string && q.string===picked[1].string);
   }
-  lab.body.append(lab.row(one,two),positionsRow,element('p','Tap where you play. Outlined notes show other places to play the same pitch in one-note mode.'),board.root,out,view.surface);
+  lab.body.append(lab.row(one,two),positionsRow,element('p','Tap where you play. Outlined notes show other places to play the same pitch in one-note mode.'),board.root,preview,out);
   refresh(first.fret);
 });

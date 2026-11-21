@@ -1,7 +1,7 @@
 const colors = ['#dce6d7','#b7f493','#9ad9eb','#f0c37d','#d3b6ed'];
 const stringSymbols = ['e','B','G','D','A','E'];
 let sequence = [], cursor = 0, looping = false, playing = false, finished = false;
-let timeout, generation = 0, barShown = -1, neckKey = '';
+let timeout, generation = 0, barShown = -1, lessonNeck, lastNeckEvent;
 let quizTotal = 0, quizCorrect = 0;
 const voices = new Set();
 const levelNumber = () => Number($('level').value) || 0;
@@ -84,41 +84,22 @@ function buildStaff(bar) {
   }
 }
 function drawNeck(event) {
-  // Keep both ends of a shift visible and the neck still throughout the bar.
-  const fretted = score().bars[event.bar].flatMap(item=>item.positions.map(p=>p.fret)).filter(f=>f>0);
-  const high = Math.max(0,...fretted);
-  const low = fretted.length ? Math.min(...fretted) : 1;
-  const wide=high-low>5;
-  const current=event.positions[0]?.fret || low;
-  const start = wide ? Math.max(1,Math.min(20,current-2)) : Math.max(1, Math.min(low,high-4));
-  const width = wide ? 5 : Math.max(5,high-start+1);
-  const frets = [0,...Array.from({length:width},(_,i)=>start+i)];
-  const neck = $('neck'), key = frets.join(',');
-  if (key !== neckKey) {
-    neckKey = key;
-    neck.replaceChildren(element('span'));
-    neck.style.setProperty('--frets',frets.length);
-    for (const f of frets) neck.append(element('b', f || '0','fret-label'));
-    for (let s=1;s<=6;s++) {
-      neck.append(element('b',stringSymbols[s-1],'fret-label'));
-      for (const f of frets) {
-        const pitch = pitchAt(s,f);
-        const button = element('button', null, 'fret' + (f===0 ? ' open' : ''));
-        button.dataset.string = s;
-        button.dataset.fret = f;
-        button.setAttribute('aria-label',stringNames[s-1] + ' string, fret ' + f + ', ' + pitch.name + pitch.octave);
-        button.dataset.pitch=pitch.name;
-        button.append(element('span',pitch.name));
-        button.onclick = () => {
-          haltPlayback();stopMetro();
-          $('explore').textContent = pitch.name + pitch.octave + ' · ' + stringNames[s-1] + ' string · ' + (f ? 'fret ' + f : 'open');
-          audition(note(s,f,0));
-        };
-        neck.append(button);
-      }
-    }
+  if(!lessonNeck){
+    lessonNeck=guitarNeck('Lesson fretboard',({string,fret})=>{
+      haltPlayback();stopMetro();
+      const pitch=pitchAt(string,fret);
+      $('explore').textContent=pitch.name+pitch.octave+' · '+stringNames[string-1]+' string · '+(fret?'fret '+fret:'open');
+      audition(note(string,fret,0));
+    });
+    for(const cell of lessonNeck.cells)cell.classList.add('fret');
+    $('neck').append(lessonNeck.root);
   }
-  for (const cell of neck.querySelectorAll('button')) {
+  if(lastNeckEvent!==event){
+    const p=event.positions.find(p=>p.fret>0) || event.positions[0];
+    if(p){lessonNeck.reveal(p.fret);lessonNeck.setTabStop(lessonNeck.cellAt(p.string,p.fret))}
+    lastNeckEvent=event;
+  }
+  for(const cell of lessonNeck.cells){
     const s = Number(cell.dataset.string), f = Number(cell.dataset.fret);
     const pos = event.positions.find(p=>p.string === s && p.fret === f);
     cell.classList.toggle('blank',!pos && !$('names').checked);
@@ -207,14 +188,14 @@ async function audition(event) {
   if(await enableAudio() && token===generation) sound(event,audio.currentTime,.6);
 }
 function seek(index, listen=false) {
-  haltPlayback();finished=false;cursor=index;paint();
+  haltPlayback();finished=false;cursor=index;lastNeckEvent=null;paint();
   if(listen){stopMetro();audition(sequence[index])}
 }
 async function play() {
   if(playing){haltPlayback();return}
   stopMetro();haltPlayback();
   if(finished)cursor=0;
-  finished=false;playing=true;
+  finished=false;playing=true;lastNeckEvent=null;
   const token=generation;
   paint();
   const audible=await enableAudio();
@@ -370,7 +351,7 @@ function openLesson(ex) {
   for(const [label,detail] of [['Start at',ex.bpm+' BPM'],['Completion goal',ex.goal],['Next challenge',ex.id==='chromatic' && levelNumber()<3 ? 'After five clean full passes, try the '+chromaticLevels[levelNumber()+1].name.toLowerCase()+' level at the same tempo.' : score().next]]){
     const row=element('p');row.append(element('strong',label+' · '),detail);guide.append(row);
   }
-  $('explore').textContent='Tap a fret to hear its pitch. The thin high E string is on top.';
+  $('explore').textContent='Tap a fret to hear its pitch. Swipe or drag along the neck. The thin high E string is on top.';
   $('songNotes').hidden=!songLessons.has(ex.id);
   if(!$('songNotes').hidden){
     $('noteBars').replaceChildren(...score().bars.map((bar,i)=>{

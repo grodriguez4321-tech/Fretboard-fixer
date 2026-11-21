@@ -11,10 +11,10 @@ const lab = (() => {
     const sample=[{string:2,fret:3},{string:3,fret:4}];
     switch(id){
       case 'mic':toolVisual.meter(view,-9,'A2');break;
-      case 'fingers':toolVisual.neck(view,sample);break;
+      case 'fingers':toolVisual.neckTile(view,sample);break;
       case 'rhythm':toolVisual.rhythm(view,[0,1,1.5,2,3],2,[.03,1.05,1.46]);break;
       case 'earMelody':toolVisual.melody(view,4,[...sample,...sample],2);break;
-      case 'harmony':toolVisual.chords(view,['Am','C']);break;
+      case 'harmony':toolVisual.neckTile(view,shapes.Am.map(([string,fret])=>({string,fret})));break;
       case 'sections':toolVisual.sections(view,Array.from({length:12},(_,i)=>({sourceIndex:i,bar:Math.floor(i/4),beats:1})),4,7,[{first:0,last:3}]);break;
     }
     view.surface.setAttribute('aria-hidden','true');

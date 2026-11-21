@@ -36,19 +36,14 @@ const toolVisual = (() => {
     if(cents!==null){const x=150+Math.max(-50,Math.min(50,cents))*2.64;
       mark(s,'path',{d:'M '+(x-6)+' 39 l 6 -9 l 6 9 Z',fill:amber});dot(s,x,32,4,amber)}
   }
-  function neck(view,positions){
-    const fs=positions.map(p=>p.fret).filter(Boolean);
-    const start=Math.max(1,Math.min(Math.min(...fs,20),Math.max(1,Math.max(...fs,5)-4)));
-    const end=Math.min(24,Math.max(start+4,...fs));
-    const cols=end-start+1,cell=222/cols,labels=['e','B','G','D','A','E'];
-    const s=view.reset('Fretting positions',positions.map(p=>locationName(p)).join(', ')||'No playable position',130);
-    for(let i=0;i<6;i++){const y=28+i*17;label(s,10,y+4,labels[i]);line(s,24,y,288,y,grid,1+i*.2)}
-    for(let i=0;i<=cols;i++){const x=65+i*cell;line(s,x,21,x,119,grid,i===0?2:1)}
-    label(s,42,14,'0');
-    for(let f=start;f<=end;f++){if(cols<=8||f===start||f===end||f%3===0)label(s,65+(f-start+.5)*cell,14,f)}
-    for(const [i,p] of positions.entries()){
-      const x=p.fret===0?42:65+(p.fret-start+.5)*cell,y=28+17*(p.string-1);
-      dot(s,x,y,8,i?amber:mint);label(s,x,y+4,p.fret,'#122820',10);
+  // Cards show a crop of the same instrument used when the tool opens.
+  function neckTile(view,positions){
+    const s=view.reset('Fretting positions','Guitar fingerboard',132);
+    s.setAttribute('viewBox','0 0 200 132');
+    mark(s,'image',{x:0,y:0,width:fretEdges.at(-1)/2,height:132,href:'rosewood-neck.webp'});
+    for(const p of positions){
+      const x=(fretEdges[p.fret]+fretWidths[p.fret]/2)/2,y=(p.string-.5)*22;
+      dot(s,x,y,8,mint);label(s,x,y+3,p.fret,'#18281d',10);
     }
   }
   function rhythm(view,beats,step=-1,hits=[]){
@@ -75,20 +70,6 @@ const toolVisual = (() => {
       label(s,x+(cell-5)/2,51,i+1,dim,12);
     }
   }
-  function chords(view,names,active=-1){
-    const s=view.reset('Chord shapes',names.map((n,i)=>(active===i?'Playing ':'')+n+' low to high: '+[6,5,4,3,2,1].map(string=>shapes[n].find(p=>p[0]===string)?.[1]??'mute').join(' ')).join('. '),145);
-    names.forEach((n,index)=>{
-      const x=19+index*146, ink=active===index?amber:mint;
-      label(s,x,20,n,ink,18,'start');if(index===active)label(s,x+108,19,'Playing',amber,12,'end');
-      for(let j=0;j<4;j++)line(s,x,50+j*19,x+105,50+j*19,j===0?dim:grid,j===0?3:1);
-      for(let k=0;k<6;k++){
-        const sx=x+k*21, string=6-k, position=shapes[n].find(p=>p[0]===string);
-        line(s,sx,50,sx,107);label(s,sx,128,['E','A','D','G','B','e'][k]);
-        if(!position||!position[1])label(s,sx,43,position?'○':'×',pale,15);
-        else {const y=50+(position[1]-.5)*19;dot(s,sx,y,8,ink);label(s,sx,y+4,position[2],'#14271e',11)}
-      }
-    });
-  }
   function sections(view,events,first,last,records=[]){
     const total=events.reduce((v,e)=>v+e.beats,0)||1;
     const bounds=[];let time=0;
@@ -102,5 +83,5 @@ const toolVisual = (() => {
     }
     label(s,12,77,'Selected notes',mint,12,'start');label(s,288,77,'Saved range',amber,12,'end');
   }
-  return {panel,meter,neck,rhythm,melody,chords,sections};
+  return {panel,meter,neckTile,rhythm,melody,sections};
 })();

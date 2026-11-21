@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
@@ -83,6 +83,14 @@ for(const level of ['1','2','3','0']){
 await page.selectOption('#phrase','1');
 assert.match(await page.locator('#placement').innerText(),/fret 8/);
 await page.click('#step');assert.match(await page.locator('#placement').innerText(),/fret 7/);
+const lessonScroll=page.locator('#neck .neck-scroll');
+await page.locator('#neck input[type=range]').focus();await page.keyboard.press('End');
+await page.click('#play');
+assert.ok(await lessonScroll.evaluate(el=>{
+  const key=el.querySelector('.selected').getBoundingClientRect(),viewport=el.getBoundingClientRect();
+  return key.left>=viewport.left-1 && key.right<=viewport.right+1;
+}),'starting playback brings the current note back after exploring');
+await page.click('#play');
 await page.click('#restart');await page.click('#loop');
 await page.evaluate(()=>{
   window.audioEvents=[];
@@ -190,7 +198,30 @@ console.log('PASS phrase training, repair, tempo change, cue-free recall, delaye
 
 await nav('Tools');await moreTools();await page.click('#newRiff');
 await page.fill('#riffName','B-string 10–9');
-await page.selectOption('#riffWindow','6');
+
+const boardScroll=page.locator('#entryNeck .neck-scroll');
+assert.equal(await boardScroll.locator('button').count(),150);
+assert.equal(await page.evaluate(async()=>{const img=new Image();img.src='rosewood-neck.webp';await img.decode();return img.naturalWidth}),2914);
+await boardScroll.scrollIntoViewIfNeeded();
+const dragBox=await boardScroll.boundingBox();
+await page.mouse.move(dragBox.x+170,dragBox.y+56);await page.mouse.down();
+await page.mouse.move(dragBox.x+67,dragBox.y+56,{steps:10});await page.mouse.up();
+assert.ok(await boardScroll.evaluate(el=>el.scrollLeft>70));
+assert.equal(await page.locator('#draftNotes button').count(),0,'dragging must not add a note');
+if(process.argv[2]==='chromium'){
+  const cdp=await page.context().newCDPSession(page);
+  const x=dragBox.x+185,y=dragBox.y+84;
+  const before=await boardScroll.evaluate(el=>el.scrollLeft);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+  for(let i=1;i<=8;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-14*i,y}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await page.waitForFunction(start=>document.querySelector('#entryNeck .neck-scroll').scrollLeft>start+20,before);
+  assert.equal(await page.locator('#draftNotes button').count(),0,'swiping must not write a note');
+  await cdp.detach();
+}
+const last=boardScroll.locator('button[data-string="2"][data-fret="24"]');
+await last.focus();await page.keyboard.press('ArrowLeft');
+assert.equal(await page.evaluate(()=>document.activeElement.dataset.fret),'23');
 const fretButton=n=>page.getByRole('button',{name:'Add B string fret '+n,exact:true});
 for(const fret of [10,9,10])await fretButton(fret).click();
 await page.selectOption('#riffLength','2');await fretButton(9).click(); // beats 4 to 1 of bar two
@@ -202,7 +233,7 @@ assert.equal(await page.locator('#draftNotes button').count(),5);
 assert.equal(await page.locator('#riffRibbon .riff-measure').count(),2);
 assert.equal(await page.locator('#riffRibbon .rest').count(),1);
 await page.locator('#draftNotes button').first().click();await page.click('#replaceNote');
-await page.selectOption('#riffWindow','6');await fretButton(10).click();
+await fretButton(10).click();
 await page.click('#saveRiff');
 const riffId=await page.locator('#lesson').inputValue();
 assert.ok(riffId.startsWith('riff-'));

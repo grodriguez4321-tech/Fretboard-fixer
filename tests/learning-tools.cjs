@@ -10,7 +10,8 @@ module.exports=async function(page,assert,choose,nav){
     await page.setViewportSize({width,height:844});
     for(const name of ['Alternate fingerings','Acoustic note check','Song-section map','Rhythm trainer','Melody by ear','Chord and melody playground']){
       await open(name);
-      const graph=box.locator('#labBody > .tool-visual svg');
+      const isNeck=['Alternate fingerings','Chord and melody playground'].includes(name);
+      const graph=box.locator(isNeck?'.neck-scroll':'#labBody > .tool-visual svg');
       assert.ok(await graph.isVisible(),name+' diagram');
       if(name==='Alternate fingerings' || name==='Song-section map'){
         const size=await box.locator('.touch-fret').first().boundingBox();
@@ -24,13 +25,15 @@ module.exports=async function(page,assert,choose,nav){
   await open('Alternate fingerings');
   const cell=(string,fret)=>box.locator('.touch-fret[data-string="'+string+'"][data-fret="'+fret+'"]');
   await cell(6,0).click();assert.equal(await box.locator('h3').innerText(),'E2');
-  await button('Frets 21 to 24').click();await cell(1,24).click();
+  await box.getByRole('slider').focus();await page.keyboard.press('End');
+  assert.ok(await box.locator('.neck-scroll').evaluate(el=>el.scrollLeft>0 && el.scrollLeft+el.clientWidth>=el.scrollWidth-1));await cell(1,24).click();
   assert.equal(await box.locator('h3').innerText(),'E6');
-  await button('Frets 9 to 12').click();await cell(2,10).click();
+  await cell(2,10).click();
   assert.ok(await button('high E string · fret 5').isVisible());
   await button('high E string · fret 5').click();
-  assert.equal(await box.locator('svg').getAttribute('aria-label'),'high E string · fret 5');
-  await button('Two notes').click();await button('Frets 1 to 4').click();await cell(1,3).click();
+  assert.equal(await cell(1,5).getAttribute('data-mark'),'selected');
+  assert.equal(await box.getByRole('status').innerText(),'high E string · fret 5');
+  await button('Two notes').click();await cell(1,3).click();
   assert.match(await box.locator('h3').innerText(),/A4 \+ G4/);
   assert.ok(await box.getByRole('button',{name:/span/}).count()>0);
   await close();
@@ -89,9 +92,9 @@ module.exports=async function(page,assert,choose,nav){
   for(const fret of [8,5,7,5])await button('B string · fret '+fret).click();
   await box.getByText('Complete · 1 hints · 1 retries').waitFor();
 
-  await open('Chord and melody playground');await button('C4').click();await button('E4').click();
+  await open('Chord and melody playground');await button('B string fret 1, C4').click();await button('high E string fret 0, E4').click();
   await button('Compare melody').click();await box.getByText('Same melody over Am').waitFor();
-  assert.match(await box.locator('svg').getAttribute('aria-label'),/Playing Am/);
+  assert.match(await box.locator('.harmony-view [role=status]').innerText(),/Playing Am/);
   await box.getByText('Same melody over C',{exact:true}).waitFor();await button('Stop sound').click();
   await open('Song-section map');await box.getByLabel('Song or saved riff').selectOption('song');
   await button('Bar 2').click();
