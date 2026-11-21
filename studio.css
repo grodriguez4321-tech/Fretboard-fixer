@@ -30,3 +30,6 @@ button{touch-action:manipulation}button:hover,select:hover{border-color:var(--mi
 .fret.selected span{display:inline-flex;align-items:center;gap:2px}.fret sup{font-size:.62em;align-self:flex-start}.fret[aria-pressed=true]{box-shadow:none;border-right-color:#7a826d}
 
 .tabcol span{height:19px}.tabcol.current:hover{border-color:var(--mint)}
+.lesson-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,225px)}
+.lesson-head>*,.choose select{min-width:0}.lesson-head h1,.lesson-head p{overflow-wrap:anywhere}
+@media(max-width:820px){.lesson-head{grid-template-columns:minmax(0,1fr);gap:10px}.choose{max-width:100%}}

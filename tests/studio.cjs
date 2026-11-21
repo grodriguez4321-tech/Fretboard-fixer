@@ -38,7 +38,10 @@ for(const width of [320,390,768,1440]){
     if(document.querySelectorAll('.tabcol.current').length!==1)problems.push('cursor');
     if(document.querySelectorAll('.fret.selected').length!==sequence[i].positions.length)problems.push('neck');
    }
-   if(document.documentElement.scrollWidth>innerWidth+1)problems.push('page overflow '+document.documentElement.scrollWidth);
+   if(document.documentElement.scrollWidth>innerWidth+1){
+     const outside=[...document.querySelectorAll('body *')].filter(el=>el.getBoundingClientRect().right>innerWidth+1 && !el.closest('.staff-scroll,select'));
+     problems.push('overflow '+document.documentElement.scrollWidth+' from '+outside.slice(0,8).map(el=>el.id||el.className||el.tagName).join(', '));
+   }
    return problems;
   });
   assert.deepEqual(result,[],width+' '+id);
