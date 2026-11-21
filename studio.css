@@ -28,3 +28,5 @@ button{touch-action:manipulation}button:hover,select:hover{border-color:var(--mi
 #levelRow{margin-bottom:10px;color:var(--muted);font-size:.88rem}#levelRow select{font-size:.9rem;min-height:40px;margin-left:5px}.choose select,.measure select,#level{background-color:#25332c}.timer,.stat{color:var(--txt)}
 
 .fret.selected span{display:inline-flex;align-items:center;gap:2px}.fret sup{font-size:.62em;align-self:flex-start}.fret[aria-pressed=true]{box-shadow:none;border-right-color:#7a826d}
+
+.tabcol span{height:19px}.tabcol.current:hover{border-color:var(--mint)}

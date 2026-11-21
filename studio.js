@@ -33,7 +33,10 @@ function nextIndex() {
 }
 function describe(event) {
   if (!event) return ['End of phrase', ''];
-  if (event.chord) return [event.chord, 'Downstroke · hold for four beats'];
+  if (event.chord) {
+    const shape = [6,5,4,3,2,1].map(s => event.positions.find(p => p.string===s)?.fret ?? '×');
+    return [event.chord, shape.join(' ')+' · low E to high E'];
+  }
   if (!event.positions.length) return [event.action, event.action === 'Rest' ? 'Silence' : 'Lightly mute all six strings'];
   const {string, fret, finger} = event.positions[0];
   const {name, octave} = pitchAt(string, fret);
@@ -70,10 +73,13 @@ function buildStaff(bar) {
   }
 }
 function drawNeck(event) {
-  const fretted = event.positions.filter(p=>p.fret > 0).map(p=>p.fret);
-  const low = Math.max(1, Math.min(...(fretted.length ? fretted : [1])) - 1);
-  const start = active.id === 'chromatic' || active.id === 'alternate' ? 4 : Math.min(low,7);
-  const frets = [0,...Array.from({length:Math.max(5,Math.max(0,...fretted)-start+1)},(_,i)=>start+i)];
+  // Keep both ends of a shift visible and the neck still throughout the bar.
+  const fretted = score().bars[event.bar].flatMap(item=>item.positions.map(p=>p.fret)).filter(f=>f>0);
+  const high = Math.max(0,...fretted);
+  const low = fretted.length ? Math.min(...fretted) : 1;
+  const start = Math.max(1, Math.min(low,high-4));
+  const width = Math.max(5,high-start+1);
+  const frets = [0,...Array.from({length:width},(_,i)=>start+i)];
   const neck = $('neck'), key = frets.join(',');
   if (key !== neckKey) {
     neckKey = key;
@@ -129,7 +135,7 @@ function paint() {
   [$('upcoming').textContent,$('nextPosition').textContent]=describe(sequence[next]);
   $('barName').textContent='Bar '+(event.bar+1)+' · '+score().labels[event.bar];
   $('count').textContent='Beat '+(event.beat+1)+' / 4';
-  $('play').textContent=playing?'Ⅱ Pause':finished?'▶ Replay':'▶ Play';
+  $('play').textContent=playing?'Ⅱ Pause':finished?'▶︎ Replay':'▶︎ Play';
   drawNeck(event);
 }
 function silence() {
@@ -141,7 +147,7 @@ function haltPlayback() {
   playing=false;
   clearTimeout(timeout);
   silence();
-  if(sequence.length) $('play').textContent=finished?'▶ Replay':'▶ Play';
+  if(sequence.length) $('play').textContent=finished?'▶︎ Replay':'▶︎ Play';
 }
 async function enableAudio() {
   const Context=window.AudioContext || window.webkitAudioContext;

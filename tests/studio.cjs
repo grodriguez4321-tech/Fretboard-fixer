@@ -18,6 +18,10 @@ page.on('pageerror',e=>errors.push(String(e)));
 await page.addInitScript(()=>{if(!localStorage.getItem('fretboard-v2'))localStorage.setItem('fretboard-v2',JSON.stringify({notes:'Old notes',days:{'2026-11-20':true},times:{ear:125},done:{ear:true}}))});
 await page.goto('http://127.0.0.1:'+server.address().port);
 assert.equal(await page.locator('#notes').inputValue(),'Old notes');
+const pitches=await page.evaluate(()=>[
+  pitchAt(1,5),pitchAt(2,10),pitchAt(3,2),pitchAt(6,0)
+].map(p=>[p.name+p.octave,Math.round(p.hz)]));
+assert.deepEqual(pitches,[['A4',440],['A4',440],['A3',220],['E2',82]]);
 assert.equal(await page.locator('#doneCount').innerText(),'1/11');
 assert.equal(await page.locator('#practiceTime').innerText(),'2m');
 for(const width of [320,390,768,1440]){
@@ -50,9 +54,22 @@ await page.selectOption('#phrase','1');
 assert.match(await page.locator('#placement').innerText(),/fret 8/);
 await page.click('#step');assert.match(await page.locator('#placement').innerText(),/fret 7/);
 await page.click('#restart');await page.click('#loop');
+await page.evaluate(()=>{
+  window.audioEvents=[];
+  const original=voice;
+  voice=(hz,duration,time,...rest)=>{
+    window.audioEvents.push({hz,time});
+    original(hz,duration,time,...rest);
+  };
+});
 await page.evaluate(()=>setBpm(180));await page.click('#play');await page.waitForTimeout(1560);
 assert.match(await page.locator('#play').innerText(),/Pause/);
 assert.match(await page.locator('#barName').innerText(),/Bar 2/);
+const events=await page.evaluate(()=>window.audioEvents);
+const clicks=events.filter(e=>e.hz===1250 || e.hz===890);
+assert.ok(clicks.length>=4,'expected four audible click events');
+assert.ok(events.some(e=>Math.abs(e.hz-523.251)<.01 && clicks.some(c=>Math.abs(c.time-e.time)<.001)),
+  'the C5 at the start of the isolated bar should coincide with a click');
 await page.click('#play');const paused=await page.locator('#placement').innerText();await page.waitForTimeout(450);
 assert.equal(await page.locator('#placement').innerText(),paused);
 await page.click('#loop');await page.click('#restart');await page.click('#play');
