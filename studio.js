@@ -292,7 +292,7 @@ function applyRange(expand){
 $('applyRange').onclick=()=>applyRange(false);
 $('growRange').onclick=()=>applyRange(true);
 function showLog() {
-  $('complete').textContent=store.done[active.id]?'Mark incomplete':'Mark complete';
+  $('exerciseGoal').textContent=active.goal;
   const best=store.bests[bestKey()];
   $('best').textContent=best?'Personal best · '+best+' BPM':'No clean tempo logged yet';
 }
@@ -355,6 +355,7 @@ function openLesson(ex) {
   score().labels.forEach((name,i)=>$('phrase').add(new Option('Bar '+(i+1)+' · '+name,i)));
   const guide=$('guideContent'), instructions=element('ol',null,'steps');
   const steps=ex.id==='chromatic' && levelNumber()>0 ? [score().aim,'Count 1 & 2 & 3 & 4 &. Pick down on each number and up on each &.','Loop both bars and keep every note the same length.'] : ex.steps;
+  $('firstStep').textContent=steps[0];
   for(const step of steps)instructions.append(element('li',step));
   guide.replaceChildren(instructions);
   for(const [label,detail] of [['Start at',ex.bpm+' BPM'],['Completion goal',ex.goal],['Next challenge',ex.id==='chromatic' && levelNumber()<3 ? 'After five clean full passes, try the '+chromaticLevels[levelNumber()+1].name.toLowerCase()+' level at the same tempo.' : score().next]]){
@@ -362,6 +363,7 @@ function openLesson(ex) {
   }
   $('explore').textContent='Tap a fret to hear its pitch. The thin high E string is on top.';
   buildQuiz();rebuildPhrase();showLog();render();
+  document.dispatchEvent(new Event('lessonopened'));
 }
 chromaticLevels.forEach((level,i)=>$('level').add(new Option(level.name,i)));
 $('level').onchange=()=>{store.chromaticLevel=levelNumber();save();openLesson(active)};
@@ -392,11 +394,6 @@ $('slower').onclick=()=>setBpm(tempo()-5);$('faster').onclick=()=>setBpm(tempo()
 $('saveBest').onclick=()=>{
   store.bests[bestKey()]=Math.max(Number(store.bests[bestKey()])||0,tempo());
   store.days[new Date().toLocaleDateString('en-CA')]=true;save();showLog();updateStats();
-};
-$('complete').onclick=()=>{
-  store.done[active.id]=!store.done[active.id];
-  if(store.done[active.id])store.days[new Date().toLocaleDateString('en-CA')]=true;
-  save();showLog();render();
 };
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){haltPlayback();stopMetro();if(timerRunning){tick();pauseTimer()}}

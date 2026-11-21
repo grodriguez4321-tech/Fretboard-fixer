@@ -39,13 +39,16 @@ const lab = (() => {
     if(!ok)msg.textContent='Audio is unavailable. Try opening the trainer in your browser.';
     return ok;
   }
-  $('openTools').onclick=()=>open();$('labBack').onclick=()=>open();
+  $('exerciseTools').onclick=()=>open();$('labBack').onclick=()=>open();
   $('labClose').onclick=()=>dialog.close();
   dialog.addEventListener('close',()=>{if(!dialog.open)stop()});
   document.addEventListener('visibilitychange',()=>{if(document.hidden && dialog.open)open(current)});
   window.addEventListener('pagehide',stop);
   return {body,dialog,open,stop,button,select,row,fields,status,audioReady,
-    add:(id,name,summary,render)=>tools.set(id,{name,summary,render}),
+    add:(id,name,summary,render)=>{
+      tools.set(id,{name,summary,render});
+      const tile=button(name,()=>open(id));tile.append(element('small',summary));$('toolTiles').append(tile);
+    },
     onStop:fn=>{cleanup=fn},token:()=>version};
 })();
 function midiName(midi){return pitches[midi%12]+(Math.floor(midi/12)-1)}

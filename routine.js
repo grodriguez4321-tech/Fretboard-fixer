@@ -164,23 +164,34 @@ const sections = [
 ];
 const all=sections.flatMap(s=>s.items),$=id=>document.getElementById(id);let store={};try{store=JSON.parse(localStorage.getItem('fretboard-v2')||'{}')}catch{};if(!store || typeof store!=='object' || Array.isArray(store))store={};store.bests??={};store.done??={};store.times??={};store.days??={};let active=all[0],remaining=active.duration,timerRunning=false,timerInterval=null,lastTick=0,metroRunning=false,metroTimer=null,audio=null,beat=0;
 function save(){localStorage.setItem('fretboard-v2',JSON.stringify(store))}function fmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function dayKey(){return new Date().toLocaleDateString('en-CA')}
+function todayDone(){return store.dailyDone?.[dayKey()] || {}}
+function exerciseLink(ex,done){
+  const link=element('a',null,'exercise-row');
+  link.href='#exercise/'+ex.id;
+  link.dataset.lesson=ex.id;
+  const check=element('span',done?'✓':'','check');check.setAttribute('aria-hidden','true');
+  link.append(check,element('strong',ex.name),element('small',Math.round(ex.duration/60)+' min'));
+  if(done){link.classList.add('is-done');link.setAttribute('aria-label',ex.name+', completed today')}
+  return link;
+}
 function render(){
-  const container=$('sections');
+  const container=$('sections'), done=todayDone();
   container.replaceChildren();
   for(const section of sections){
-    const heading=document.createElement('h3');
-    const total=section.items.reduce((sum,ex)=>sum+(store.times[ex.id]||0),0);
-    const completed=section.items.filter(ex=>store.done[ex.id]).length;
-    heading.textContent=section.title.split(' · ')[0]+' · '+completed+'/'+section.items.length+' complete · '+Math.floor(total/60)+'m practiced';
-    container.append(heading);
-    for(const ex of section.items){
-      const button=document.createElement('button');
-      button.className='routine-item';
-      button.textContent=(store.done[ex.id]?'✓ ':'')+ex.name;
-      button.onclick=()=>{openLesson(ex);$('studio').scrollIntoView();$('lesson').focus({preventScroll:true})};
-      container.append(button);
-    }
+    const group=element('section',null,'checklist-group'), head=element('div',null,'group-head');
+    head.append(element('h3',section.title.split(' · ')[0]),element('span',section.items.filter(ex=>done[ex.id]).length+' / '+section.items.length));
+    group.append(head,...section.items.map(ex=>exerciseLink(ex,done[ex.id])));container.append(group);
   }
+  const count=all.filter(ex=>done[ex.id]).length,next=all.find(ex=>!done[ex.id]);
+  $('todayCount').textContent=count+' of '+all.length+' done';
+  $('todayProgress').value=count;
+  $('todayDate').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  $('nextExercise').hidden=!next;
+  if(next){$('nextExercise').href='#exercise/'+next.id;$('nextExercise').textContent=count?'Continue practice':'Start practice'}
+  else $('finishNotice').textContent='All exercises complete for today.';
+  $('savedRiffs').hidden=!riffLessons.size;
+  $('riffList').replaceChildren(...Array.from(riffLessons.values(),ex=>exerciseLink(ex,done[ex.id])));
   updateStats();
 }
 function updateStats(){let done=all.filter(x=>store.done[x.id]).length;$('doneCount').textContent=done+'/'+all.length;let total=Object.values(store.times).reduce((a,b)=>a+b,0);$('practiceTime').textContent=Math.floor(total/60)+'m';let d=new Date(),count=0;for(let i=0;i<365;i++){let key=d.toLocaleDateString('en-CA');if(store.days[key])count++;else if(i>0)break;d.setDate(d.getDate()-1)}$('streak').textContent=count}
@@ -188,4 +199,4 @@ function pauseTimer(){timerRunning=false;clearInterval(timerInterval);$('timerBt
 $('timerBtn').onclick=()=>{if(timerRunning){pauseTimer();return}if(remaining<=0)remaining=active.duration;timerRunning=true;lastTick=performance.now();timerInterval=setInterval(tick,200);$('timerBtn').textContent='Pause timer'};$('timerReset').onclick=()=>{pauseTimer();remaining=active.duration;$('timer').textContent=fmt(remaining)};
 function setBpm(v){v=Math.max(40,Math.min(180,v));$('speed').textContent=v+' BPM';$('bpm').value=v;$('bpmDisplay').textContent=v;document.dispatchEvent(new Event('practicetempochange'));if(metroRunning){stopMetro();startMetro()}}$('bpm').oninput=e=>setBpm(+e.target.value);$('beats').onchange=()=>{makeDots();if(metroRunning){stopMetro();startMetro()}};function makeDots(){let n=+$('beats').value;$('beatCount').textContent=n+' beats / bar';$('dots').innerHTML=Array.from({length:n},(_,i)=>'<span class="dot" id="dot'+i+'"></span>').join('')}
 function clickSound(accent){if(!audio)return;const osc=audio.createOscillator(),gain=audio.createGain(),t=audio.currentTime;osc.frequency.value=accent?1100:760;osc.type='sine';gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.18,t+.004);gain.gain.exponentialRampToValueAtTime(.0001,t+.065);osc.connect(gain).connect(audio.destination);osc.start(t);osc.stop(t+.07)}function metroTick(){let n=+$('beats').value;clickSound(beat===0);document.querySelectorAll('.dot').forEach((el,i)=>el.classList.toggle('lit',i===beat));beat=(beat+1)%n}function startMetro(){audio??=new (window.AudioContext||window.webkitAudioContext)();audio.resume();metroRunning=true;beat=0;metroTick();metroTimer=setInterval(metroTick,60000/(+$('bpm').value));$('metroBtn').textContent='Stop click'}function stopMetro(){metroRunning=false;clearInterval(metroTimer);$('metroBtn').textContent='Start click';document.querySelectorAll('.dot').forEach(x=>x.classList.remove('lit'))}$('metroBtn').onclick=()=>metroRunning?stopMetro():(haltPlayback(),startMetro());
-$('notes').value=store.notes||'';$('notes').oninput=e=>{store.notes=e.target.value;save()};$('resetRoutine').onclick=()=>{if(confirm('Clear completed exercises and practice time? Your notes will stay.')){store.done={};store.times={};store.days={};pauseTimer();remaining=active.duration;$('timer').textContent=fmt(remaining);save();render();showLog()}};$('export').onclick=()=>{const blob=new Blob([JSON.stringify({exported:new Date().toISOString(),...store},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fretboard-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};makeDots();
+$('notes').value=store.notes||'';$('notes').oninput=e=>{store.notes=e.target.value;save()};$('resetRoutine').onclick=()=>{if(confirm('Clear completed exercises and practice time? Your notes will stay.')){store.done={};store.dailyDone={};store.times={};store.days={};pauseTimer();remaining=active.duration;$('timer').textContent=fmt(remaining);save();render();showLog()}};$('export').onclick=()=>{const blob=new Blob([JSON.stringify({exported:new Date().toISOString(),...store},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fretboard-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};makeDots();

@@ -1,25 +1,38 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fretboard Fixer · Practice studio</title><meta name="theme-color" content="#143e35">
 <link rel="stylesheet" href="studio.css"></head><body><main>
-<header class="brandbar"><a href="#studio" class="brand"><i aria-hidden="true"></i>Fretboard Fixer</a>
-<nav aria-label="Studio navigation"><a href="#studio">Practice</a><a href="#routine">Routine</a><a href="#journal">Journal</a></nav></header>
-<section class="studio" id="studio" aria-labelledby="lessonTitle">
+<header class="brandbar"><a href="#practice" class="brand"><i aria-hidden="true"></i>Fretboard Fixer</a>
+<nav aria-label="Main navigation"><a href="#practice">Practice</a><a href="#tools">Tools</a><a href="#journal">Journal</a></nav></header>
+<section id="practicePage" aria-labelledby="practiceTitle">
+  <header class="lesson-head daily-hero">
+    <div id="todayDate" class="category"></div><h1 id="practiceTitle" tabindex="-1">Today’s practice</h1>
+    <p>11 exercises · 25 minutes</p>
+    <div class="riff-launch"><a id="nextExercise" class="start-link" href="#exercise/chromatic">Start practice</a><button id="quickStart">5-minute session</button></div>
+  </header>
+  <div class="checklist-heading"><h2>Exercise checklist</h2><div class="daily-count"><span id="todayCount"></span><progress id="todayProgress" max="11" value="0" aria-label="Today’s exercises completed"></progress></div></div>
+  <p role="status" id="finishNotice"></p>
+  <div id="sections"></div>
   <aside id="reviewQueue" class="review-strip" hidden aria-label="Scheduled phrase review">
     <div><strong id="reviewTitle"></strong><div id="reviewDetail" class="hint"></div></div>
     <button id="startReview">Try from memory</button>
   </aside>
+  <section id="savedRiffs" class="card" hidden><h2>My riffs</h2><div id="riffList"></div></section>
+</section>
+<section class="studio" id="studio" aria-labelledby="lessonTitle" hidden>
+  <a class="back-link" href="#practice">← Today’s practice</a>
   <header class="lesson-head">
-    <div class="category" id="category"></div><h1 id="lessonTitle"></h1><p id="objective"></p>
-    <div class="riff-launch"><button id="quickStart">5-minute session</button><button id="openTools">Learning tools</button><button id="newRiff">Build a riff</button><button hidden id="copyRiff">Edit a copy</button></div>
+    <div class="category" id="category"></div><h1 id="lessonTitle" tabindex="-1"></h1><p id="objective"></p>
+    <button hidden id="copyRiff">Edit a copy</button>
   </header>
   <div class="lesson-settings">
-    <label class="choose" for="lesson">Exercise<select id="lesson"></select></label>
+    <select id="lesson" aria-label="Exercise" hidden></select>
     <div id="levelRow"><label for="level">Level</label><select id="level"></select></div>
-    <button type="button" id="focusMode" aria-pressed="false">Focus mode</button>
+    <button type="button" id="exerciseTools">Learning tools</button><button type="button" id="focusMode" aria-pressed="false">Focus mode</button>
   </div>
   <section id="quickPanel" class="quick-panel" hidden aria-label="Five-minute practice session">
     <div class="score-head"><h2 id="quickTitle"></h2><strong id="quickTime"></strong></div>
     <p id="quickPrompt"></p><div class="log-buttons"><button id="quickPause">Pause session</button><button id="quickNext">Next activity</button><button id="quickReview" hidden>Try from memory</button></div>
   </section>
+  <p class="first-step" id="firstStep"></p>
   <div class="playing-area">
     <section class="surface tab-panel" aria-label="Tab player">
     <div class="score-head"><h2>Interactive tab</h2><label class="measure">Phrase <select id="phrase" aria-label="Practice phrase"></select></label></div>
@@ -56,12 +69,18 @@
   </div>
   <details class="guide" open><summary>Practice guide</summary><div id="guideContent"></div></details>
   <div id="logPanel"><h2>Practice log</h2><div class="log-buttons"><span id="timer" class="timer">03:00</span><button id="timerBtn">Start timer</button><button id="timerReset">Reset timer</button></div>
-  <p class="hint">Start the timer to log practice minutes. Mark completion when you meet the goal.</p><div class="log-buttons"><button id="complete" class="primary"></button><button id="saveBest">Log clean BPM</button><span id="best" role="status"></span></div></div>
+  <p class="hint">Start the timer to log practice minutes. Mark completion when you meet the goal.</p><div class="log-buttons"><button id="saveBest">Log clean BPM</button><span id="best" role="status"></span></div></div>
+  <div class="finish-bar"><div><strong>Completion goal</strong><p id="exerciseGoal"></p></div><button id="complete" class="primary">Done</button></div>
 </section>
+<section id="toolsPage" hidden aria-labelledby="toolsTitle"><header class="page-heading"><h1 id="toolsTitle" tabindex="-1">Learning tools</h1></header>
+  <div id="toolTiles" class="tool-menu"></div>
+  <section class="card"><h2>Riff builder</h2><p>Write a phrase, save it, and play it in the studio.</p><button id="newRiff">Build a riff</button></section>
 
 <section class="card" id="metronome"><div class="row between"><h2>Standalone metronome</h2><span id="beatCount" class="pill">4 beats / bar</span></div><div class="row"><span class="bpm" id="bpmDisplay">60</span><span class="muted">BPM</span></div><input id="bpm" aria-label="Tempo" type="range" min="40" max="180" step="5" value="60"><div class="row between"><div class="row"><label for="beats">Beats</label><select id="beats"><option>2</option><option>3</option><option selected>4</option><option>6</option></select></div><button class="primary" id="metroBtn">Start click</button><div id="dots" class="dots"></div></div><p class="muted" style="font-size:.85rem">Tap Start to enable audio. Beat one is accented. Adjust tempo while playing.</p></section>
-<section class="card" id="routine"><div class="row between"><div><h2>Today's guided routine</h2><div class="muted">25 minutes · 5 focused sections</div></div><button id="resetRoutine">Reset routine</button></div><div class="grid" style="margin:16px 0"><div class="mini"><div id="doneCount" class="stat">0/11</div><div class="muted">exercises done</div></div><div class="mini"><div id="practiceTime" class="stat">0m</div><div class="muted">practice logged</div></div><div class="mini"><div id="streak" class="stat">0</div><div class="muted">practice days</div></div></div><div id="sections"></div></section>
-<section class="card" id="journal"><h2>Practice notes</h2><p class="muted">What got cleaner? Where did your fingers hesitate?</p><textarea id="notes" placeholder="Today I played the 5–8 pattern cleanly at 65 BPM..."></textarea><div class="row between" style="margin-top:12px"><span id="saved" class="muted">Saved on this device</span><button id="export">Export progress (.json)</button></div></section><footer>Practice pain-free: don't force large stretches. Move the whole hand, reduce the span, or shift positions. Your data stays in this browser unless exported.</footer></main>
+</section>
+<section id="journal" hidden aria-labelledby="journalTitle"><header class="page-heading"><h1 id="journalTitle" tabindex="-1">Practice journal</h1></header>
+<section class="card"><h2>Overall progress</h2><div class="grid" style="margin:16px 0"><div class="mini"><div id="doneCount" class="stat">0/11</div><div class="muted">exercises done</div></div><div class="mini"><div id="practiceTime" class="stat">0m</div><div class="muted">practice logged</div></div><div class="mini"><div id="streak" class="stat">0</div><div class="muted">practice days</div></div></div><button id="resetRoutine">Reset progress</button></section>
+<section class="card"><h2>Practice notes</h2><p class="muted">What got cleaner? Where did your fingers hesitate?</p><textarea id="notes" placeholder="Today I played the 5–8 pattern cleanly at 65 BPM..."></textarea><div class="row between" style="margin-top:12px"><span id="saved" class="muted">Saved on this device</span><button id="export">Export progress (.json)</button></div></section></section><footer>Practice pain-free: don't force large stretches. Move the whole hand, reduce the span, or shift positions. Your data stays in this browser unless exported.</footer></main>
 <dialog id="labDialog" aria-labelledby="labTitle">
   <div class="score-head"><h2 id="labTitle">Learning tools</h2><button id="labClose">Close</button></div>
   <div id="labBody"></div><button id="labBack" hidden>All tools</button>
@@ -97,4 +116,5 @@
 <script src="pitch-tools.js"></script>
 <script src="music-drills.js"></script>
 <script src="practice-plans.js"></script>
+<script src="pages.js"></script>
 </body></html>

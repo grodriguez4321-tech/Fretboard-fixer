@@ -87,6 +87,6 @@
       store.riffs.pop();store.riffDraft=previousDraft;redraw('Device storage is full. Your draft is still open.');return;
     }
     registerRiff(riff);refreshRiffPicker();dialog.close();openLesson(lessonById(riff.id));
-    $('studio').scrollIntoView();$('lesson').focus({preventScroll:true});
+    $('studio').scrollIntoView();$('lessonTitle').focus({preventScroll:true});
   };
 })();
