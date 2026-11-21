@@ -268,11 +268,11 @@ const cover=await page.request.get(new URL('/acoustic-cover.webp',page.url()).hr
 assert.equal(cover.status(),200);assert.equal((await cover.body()).subarray(8,12).toString(),'WEBP');
 await page.click('#focusMode');
 assert.equal(await page.locator('#focusMode').getAttribute('aria-pressed'),'true');
-assert.ok(await page.locator('.lesson-head').isHidden());
+assert.ok(await page.locator('#studio .lesson-head').isHidden());
 await page.click('#step');
 assert.ok(await page.locator('.fret.selected').count()>0);
 await page.keyboard.press('Escape');
-assert.ok(await page.locator('.lesson-head').isVisible());
+assert.ok(await page.locator('#studio .lesson-head').isVisible());
 await require('./learning-tools.cjs')(page,assert,choose,nav);
 await nav('Practice');
 await page.reload();assert.equal(await page.locator('#todayCount').innerText(),'1 of 11 done');
