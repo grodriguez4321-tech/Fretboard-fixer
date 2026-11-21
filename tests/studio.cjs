@@ -4,10 +4,10 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
- res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':'text/html');fs.createReadStream(file).pipe(res);
+ res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
 });
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 let browser;
@@ -228,6 +228,13 @@ for(const width of [320,390,768,1440]){
 }
 console.log('PASS riff editing, draft recovery, sustained notes, cross-bar loop bounds, count-in, gap, expansion, custom recall and export.');
 
+await page.click('#focusMode');
+assert.equal(await page.locator('#focusMode').getAttribute('aria-pressed'),'true');
+assert.ok(await page.locator('.lesson-head').isHidden());
+await page.click('#step');
+assert.ok(await page.locator('.fret.selected').count()>0);
+await page.keyboard.press('Escape');
+assert.ok(await page.locator('.lesson-head').isVisible());
 await require('./learning-tools.cjs')(page,assert);
 assert.deepEqual(errors,[]);console.log('PASS progression, timing, loop boundaries, transport, metronome handoff, blind quiz, note quiz, timer expiry, completion, export, legacy persistence.');
 }finally{await browser?.close();server.close()}

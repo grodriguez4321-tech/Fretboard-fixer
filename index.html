@@ -1,25 +1,42 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fretboard Fixer · Practice studio</title><style>
-:root{color-scheme:dark;--bg:#091317;--card:#122329;--panel:#1b3037;--line:#34515a;--txt:#e8f0f0;--muted:#a0b5bb;--mint:#73e1b9;--blue:#68b8f6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:16px system-ui,-apple-system,sans-serif}main{max-width:860px;margin:auto;padding:22px 15px 60px}h1{font-size:2rem;margin:0}h2{font-size:1.35rem;margin:0 0 12px}h3{font-size:1.05rem;margin:0 0 8px}.muted{color:var(--muted)}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin:18px 0}.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.between{justify-content:space-between}button,select{border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--txt);padding:10px 14px;font:inherit;cursor:pointer}button.primary{background:var(--mint);color:#07241c;font-weight:750;border:0}button:disabled{opacity:.4;cursor:not-allowed}button.active{border-color:var(--mint);color:var(--mint)}input[type=range]{width:100%;accent-color:var(--mint)}.bpm{font-size:2.4rem;font-weight:800}.pill{border-radius:999px;padding:4px 10px;background:var(--panel);font-size:.8rem;color:var(--muted)}.exercise{border:1px solid var(--line);border-radius:15px;margin:10px 0;overflow:hidden}.exercise>button{display:block;width:100%;text-align:left;border:0;border-radius:0;background:var(--panel);padding:16px}.exercise>button .muted{display:block;margin-top:4px;font-size:.85rem}.details{padding:16px;display:none}.exercise.open .details{display:block}.tab{overflow-x:auto;background:#09171c;border-radius:10px;padding:14px;margin:12px 0;font:15px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre;color:#d6e7ed}.tab .current{background:var(--mint);color:#071b16;border-radius:3px}.steps{padding-left:21px;line-height:1.7}.stat{font-size:1.8rem;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.mini{background:var(--panel);border-radius:12px;padding:12px;text-align:center}.timer{font-variant-numeric:tabular-nums;font-size:2rem;font-weight:800}textarea{width:100%;min-height:90px;background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:12px;font:inherit}.dots{display:flex;gap:8px}.dot{height:12px;width:12px;border-radius:50%;background:#3c5b5b}.dot.lit{background:var(--mint)}.tag{color:var(--mint);font-size:.82rem;font-weight:700}.hidden{display:none!important}footer{color:var(--muted);font-size:.85rem;margin-top:30px}@media(max-width:540px){.card{padding:15px}.grid{grid-template-columns:repeat(3,1fr)}.stat{font-size:1.35rem}}
-</style><link rel="stylesheet" href="studio.css"></head><body><main><header class="brandbar"><a href="#studio" class="brand"><i aria-hidden="true">≋</i> Fretboard Fixer</a><nav><a href="#studio">Practice</a><a href="#routine">Routine</a><a href="#journal">Journal</a></nav></header>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fretboard Fixer · Practice studio</title><meta name="theme-color" content="#143e35">
+<link rel="stylesheet" href="studio.css"></head><body><main>
+<header class="brandbar"><a href="#studio" class="brand"><i aria-hidden="true"></i>Fretboard Fixer</a>
+<nav aria-label="Studio navigation"><a href="#studio">Practice</a><a href="#routine">Routine</a><a href="#journal">Journal</a></nav></header>
 <section class="studio" id="studio" aria-labelledby="lessonTitle">
   <aside id="reviewQueue" class="review-strip" hidden aria-label="Scheduled phrase review">
     <div><strong id="reviewTitle"></strong><div id="reviewDetail" class="hint"></div></div>
     <button id="startReview">Try from memory</button>
   </aside>
-  <div class="lesson-head"><div><div class="category" id="category"></div><h1 id="lessonTitle"></h1><p id="objective"></p></div>
-  <label class="choose">Exercise<select id="lesson"></select></label></div>
-  <div class="riff-launch"><button id="newRiff">Build a riff</button><button id="openTools">Learning tools</button><button id="quickStart">5-minute session</button><button hidden id="copyRiff">Edit a copy</button></div>
+  <header class="lesson-head">
+    <div class="category" id="category"></div><h1 id="lessonTitle"></h1><p id="objective"></p>
+    <div class="riff-launch"><button id="quickStart">5-minute session</button><button id="openTools">Learning tools</button><button id="newRiff">Build a riff</button><button hidden id="copyRiff">Edit a copy</button></div>
+  </header>
+  <div class="lesson-settings">
+    <label class="choose" for="lesson">Exercise<select id="lesson"></select></label>
+    <div id="levelRow"><label for="level">Level</label><select id="level"></select></div>
+    <button type="button" id="focusMode" aria-pressed="false">Focus mode</button>
+  </div>
   <section id="quickPanel" class="quick-panel" hidden aria-label="Five-minute practice session">
     <div class="score-head"><h2 id="quickTitle"></h2><strong id="quickTime"></strong></div>
     <p id="quickPrompt"></p><div class="log-buttons"><button id="quickPause">Pause session</button><button id="quickNext">Next activity</button><button id="quickReview" hidden>Try from memory</button></div>
   </section>
-  <div class="surface">
-    <div id="levelRow"><label for="level">Exercise level</label> <select id="level"></select></div><div class="score-head"><h2>Interactive tab</h2><label class="measure">Phrase <select id="phrase" aria-label="Practice phrase"></select></label></div>
+  <div class="playing-area">
+    <section class="surface tab-panel" aria-label="Tab player">
+    <div class="score-head"><h2>Interactive tab</h2><label class="measure">Phrase <select id="phrase" aria-label="Practice phrase"></select></label></div>
     <div class="readouts"><div><span class="caption">Play now</span><strong id="now"></strong><small id="placement"></small></div><div><span class="caption">Up next</span><strong id="upcoming"></strong><small id="nextPosition"></small></div></div>
     <div class="bar-title"><b id="barName"></b><span id="count"></span></div>
     <div class="staff-scroll"><div id="staff"></div></div>
     <div class="transport"><button class="primary" id="play">▶ Play</button><button id="restart">Restart</button><button id="step">Step</button><button id="loop" aria-pressed="false">Loop</button></div>
     <div class="sound-row"><div class="tempo-step"><button id="slower" aria-label="Decrease tempo">−</button><b id="speed"></b><button id="faster" aria-label="Increase tempo">+</button></div><label><input type="checkbox" id="clickTrack" checked> Click</label><label><input type="checkbox" id="guideTone" checked> Notes</label></div>
+    </section>
+    <section class="surface neck-panel" aria-label="Interactive fretboard">
+    <div class="neck-head"><h2>Fretboard</h2><label><input type="checkbox" id="names" checked> Note names</label></div>
+    <div id="neck"></div><div class="legend" id="legend"></div>
+    <p id="explore" class="hint" aria-live="polite">Tap a fret to hear its pitch.</p>
+    <div id="quiz" hidden></div>
+    </section>
+  </div>
+  <div class="practice-extras">
         <details class="range-tool" id="rangeTool"><summary>Tricky-change looper</summary>
       <p class="hint">Choose the first and last notes to repeat. A loop can cross a bar line.</p>
       <div class="riff-settings"><label>First note <select id="rangeFirst"></select></label><label>Last note <select id="rangeLast"></select></label></div>
@@ -36,17 +53,13 @@
         <button id="repClean" class="primary">Clean pass</button><button id="repMiss">Missed a note or beat</button>
         <button id="coachEnd">End drill</button></div></div>
     </section>
-    <div class="neck-head"><h2>Fretboard</h2><label><input type="checkbox" id="names" checked> Note names</label></div>
-    <div id="neck"></div><div class="legend" id="legend"></div>
-    <p id="explore" class="hint" aria-live="polite">Tap a fret to hear its pitch.</p>
-    <div id="quiz" hidden></div>
   </div>
   <details class="guide" open><summary>Practice guide</summary><div id="guideContent"></div></details>
-  <div id="logPanel"><div class="log-buttons"><span id="timer" class="timer">03:00</span><button id="timerBtn">Start timer</button><button id="timerReset">Reset timer</button></div>
+  <div id="logPanel"><h2>Practice log</h2><div class="log-buttons"><span id="timer" class="timer">03:00</span><button id="timerBtn">Start timer</button><button id="timerReset">Reset timer</button></div>
   <p class="hint">Start the timer to log practice minutes. Mark completion when you meet the goal.</p><div class="log-buttons"><button id="complete" class="primary"></button><button id="saveBest">Log clean BPM</button><span id="best" role="status"></span></div></div>
 </section>
 
-<section class="card"><div class="row between"><h2>Standalone metronome</h2><span id="beatCount" class="pill">4 beats / bar</span></div><div class="row"><span class="bpm" id="bpmDisplay">60</span><span class="muted">BPM</span></div><input id="bpm" aria-label="Tempo" type="range" min="40" max="180" step="5" value="60"><div class="row between"><div class="row"><label for="beats">Beats</label><select id="beats"><option>2</option><option>3</option><option selected>4</option><option>6</option></select></div><button class="primary" id="metroBtn">Start click</button><div id="dots" class="dots"></div></div><p class="muted" style="font-size:.85rem">Tap Start to enable audio. Beat one is accented. Adjust tempo while playing.</p></section>
+<section class="card" id="metronome"><div class="row between"><h2>Standalone metronome</h2><span id="beatCount" class="pill">4 beats / bar</span></div><div class="row"><span class="bpm" id="bpmDisplay">60</span><span class="muted">BPM</span></div><input id="bpm" aria-label="Tempo" type="range" min="40" max="180" step="5" value="60"><div class="row between"><div class="row"><label for="beats">Beats</label><select id="beats"><option>2</option><option>3</option><option selected>4</option><option>6</option></select></div><button class="primary" id="metroBtn">Start click</button><div id="dots" class="dots"></div></div><p class="muted" style="font-size:.85rem">Tap Start to enable audio. Beat one is accented. Adjust tempo while playing.</p></section>
 <section class="card" id="routine"><div class="row between"><div><h2>Today's guided routine</h2><div class="muted">25 minutes · 5 focused sections</div></div><button id="resetRoutine">Reset routine</button></div><div class="grid" style="margin:16px 0"><div class="mini"><div id="doneCount" class="stat">0/11</div><div class="muted">exercises done</div></div><div class="mini"><div id="practiceTime" class="stat">0m</div><div class="muted">practice logged</div></div><div class="mini"><div id="streak" class="stat">0</div><div class="muted">practice days</div></div></div><div id="sections"></div></section>
 <section class="card" id="journal"><h2>Practice notes</h2><p class="muted">What got cleaner? Where did your fingers hesitate?</p><textarea id="notes" placeholder="Today I played the 5–8 pattern cleanly at 65 BPM..."></textarea><div class="row between" style="margin-top:12px"><span id="saved" class="muted">Saved on this device</span><button id="export">Export progress (.json)</button></div></section><footer>Practice pain-free: don't force large stretches. Move the whole hand, reduce the span, or shift positions. Your data stays in this browser unless exported.</footer></main>
 <dialog id="labDialog" aria-labelledby="labTitle">
