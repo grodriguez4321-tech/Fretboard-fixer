@@ -149,7 +149,8 @@ function paint() {
   [$('upcoming').textContent,$('nextPosition').textContent]=describe(sequence[next]);
   $('barName').textContent='Bar '+(event.bar+1)+' · '+score().labels[event.bar];
   $('count').textContent='Beat '+(event.beat+1)+' / 4';
-  $('play').textContent=playing?'Ⅱ Pause':finished?'▶︎ Replay':'▶︎ Play';
+  $('play').textContent=playing?'Pause':finished?'Replay':'Play';
+  $('play').dataset.playing=String(playing);
   drawNeck(event);
 }
 function silence() {
@@ -161,7 +162,7 @@ function haltPlayback() {
   playing=false;
   clearTimeout(timeout);
   silence();
-  if(sequence.length) $('play').textContent=finished?'▶︎ Replay':'▶︎ Play';
+  if(sequence.length){$('play').textContent=finished?'Replay':'Play';$('play').dataset.playing='false'}
 }
 async function enableAudio() {
   const Context=window.AudioContext || window.webkitAudioContext;

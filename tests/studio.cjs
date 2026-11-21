@@ -39,8 +39,8 @@ for(const width of [320,390,768,1440]){
     if(document.querySelectorAll('.fret.selected').length!==sequence[i].positions.length)problems.push('neck');
    }
    if(document.documentElement.scrollWidth>innerWidth+1){
-     const outside=[...document.querySelectorAll('body *')].filter(el=>el.getBoundingClientRect().right>innerWidth+1 && !el.closest('.staff-scroll,select'));
-     problems.push('overflow '+document.documentElement.scrollWidth+' from '+outside.slice(0,8).map(el=>el.id||el.className||el.tagName).join(', '));
+     const outside=[...document.querySelectorAll('body *')].filter(el=>el.getBoundingClientRect().right>innerWidth+1 && !el.closest('.staff-scroll'));
+     problems.push('overflow '+document.documentElement.scrollWidth+' from '+outside.slice(0,12).map(el=>(el.id||el.className||el.tagName)+' '+Math.round(el.getBoundingClientRect().right)).join(', '));
    }
    return problems;
   });
@@ -228,6 +228,19 @@ for(const width of [320,390,768,1440]){
 }
 console.log('PASS riff editing, draft recovery, sustained notes, cross-bar loop bounds, count-in, gap, expansion, custom recall and export.');
 
+for(const width of [320,390,1440]){
+  await page.setViewportSize({width,height:844});
+  const [tab,neck]=await Promise.all([page.locator('.tab-panel').boundingBox(),page.locator('.neck-panel').boundingBox()]);
+  if(width>900)assert.ok(neck.x>=tab.x+tab.width-1);
+  else assert.ok(neck.y>=tab.y+tab.height-1);
+  for(const id of ['play','step','focusMode'])assert.ok((await page.locator('#'+id).boundingBox()).height>=44);
+}
+for(const scheme of ['dark','light']){
+  await page.emulateMedia({colorScheme:scheme});
+  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).colorScheme),scheme);
+}
+const cover=await page.request.get(new URL('/acoustic-cover.webp',page.url()).href);
+assert.equal(cover.status(),200);assert.equal((await cover.body()).subarray(8,12).toString(),'WEBP');
 await page.click('#focusMode');
 assert.equal(await page.locator('#focusMode').getAttribute('aria-pressed'),'true');
 assert.ok(await page.locator('.lesson-head').isHidden());

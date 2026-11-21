@@ -120,10 +120,14 @@ dialog::backdrop{background:#0b241cc7}#recallDialog{width:min(94vw,490px)}#recal
   .brandbar nav{gap:9px}.brandbar nav a{font-size:.8rem}.brandbar nav a:first-child{display:none}
   .lesson-head{padding:18px 14px;border-radius:13px}.lesson-head::before{background-image:linear-gradient(90deg,#102f27fa 0%,#102f27e8 47%,#102f2780 100%),url('acoustic-cover.webp');background-position:center,right center}
   .lesson-head h1{max-width:92%}.lesson-head p{max-width:94%;font-size:.89rem}.riff-launch{gap:5px;margin-top:12px}.riff-launch button{padding:6px 9px;font-size:.81rem}
-  .lesson-settings{gap:8px;padding:10px 0;align-items:end}.choose,#levelRow{display:grid;gap:2px;font-size:.75rem}.choose{flex:1 1 130px}.choose select{width:100%;max-width:100%}
+  .lesson-settings{gap:8px;padding:10px 0;align-items:end}.choose,#levelRow{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;font-size:.75rem}.choose{flex:1 1 130px}.choose select{width:100%;max-width:100%;overflow:hidden}.choose{overflow:clip;padding:3px;margin:-3px}
   #levelRow{flex:0 1 110px}.lesson-settings button{font-size:.83rem;padding-inline:9px}
   .surface,.card{padding:13px}.playing-area,.practice-extras{gap:9px}.readouts{gap:5px;margin:10px 0}.readouts>div{padding:8px}
   .measure{font-size:0}.measure select{max-width:132px}.score-head,.neck-head{gap:5px}.transport button{padding-inline:5px}.sound-row{gap:5px 9px}.mini{padding:9px 6px}
   .tool-menu{grid-template-columns:1fr}.legend{gap:5px 9px}dialog .riff-settings select,select,textarea{font-size:16px}
 }
 @media(max-width:365px){.choose{flex-basis:100%}.lesson-settings{align-items:center}#levelRow{display:flex;flex:auto}.readouts small{font-size:.75rem}.sound-row{column-gap:6px}}
+
+#play{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+#play::before{content:"";border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent currentColor}
+#play[data-playing=true]::before{height:10px;width:3px;border:0;border-inline:3px solid currentColor;box-sizing:content-box}
