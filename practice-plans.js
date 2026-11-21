@@ -1,6 +1,6 @@
 if(!Array.isArray(store.songSections))store.songSections=[];
 lab.add('sections','Song-section map','Save an intro, verse or chorus from a riff. Practice sections and the jump between them.',()=>{
-  const maps=[lessonById('song'),...riffLessons.values()];
+  const maps=[lessonById('song'),...riffLessons.values(),...songLessons.values()];
   const song=lab.select('Song or saved riff',maps.map(ex=>[ex.id,ex.name]),maps.some(ex=>ex.id===active.id)?active.id:'song');
   const title=document.createElement('input');title.maxLength=48;title.placeholder='Intro, verse, chorus…';
   const nameLabel=element('label','Section name');nameLabel.append(title);
@@ -130,6 +130,7 @@ lab.add('sections','Song-section map','Save an intro, verse or chorus from a rif
   // Timed exercise practice and the short session share one duration ledger.
   $('timerBtn').addEventListener('click',pause,true);
   document.addEventListener('learningtoolopen',pause);
+  document.addEventListener('leavepracticepage',pause);
   $('newRiff').addEventListener('click',pause,true);$('copyRiff').addEventListener('click',pause,true);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
   window.addEventListener('pagehide',pause);

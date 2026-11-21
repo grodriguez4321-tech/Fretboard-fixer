@@ -1,7 +1,7 @@
-module.exports=async function(page,assert){
+module.exports=async function(page,assert,choose,nav){
   const box=page.locator('#labDialog'),button=(name)=>box.getByRole('button',{name,exact:true});
   async function open(name){
-    if(await box.isVisible())await page.click('#labBack');else await page.click('#openTools');
+    if(await box.isVisible())await page.click('#labBack');else await page.click('#exerciseTools');
     await box.getByRole('button',{name:new RegExp('^'+name)}).click();
   }
   const close=()=>page.click('#labClose');
@@ -22,7 +22,7 @@ module.exports=async function(page,assert){
   assert.ok(await box.getByRole('button',{name:/span/}).count()>0);
   await close();
 
-  await page.selectOption('#lesson','chromatic');
+  await choose('chromatic');
   await open('Acoustic note check');
   const detection=await page.evaluate(()=>{
     const results=[];
@@ -86,9 +86,10 @@ module.exports=async function(page,assert){
   await button('Practice Intro').click();assert.equal(await page.locator('#phrase').inputValue(),'notes-0-1');
   await page.click('#saveBest');await open('Song-section map');await box.getByText(/clean best 65 BPM/).waitFor();
   await button('Intro into Answer').click();assert.deepEqual(await page.evaluate(()=>sequence.map(n=>n.sourceIndex)),[1,3]);
-  await page.reload();await open('Song-section map');assert.ok(await button('Intro into Answer').isVisible());await close();
+  const savedLessonURL=page.url();await page.goto('about:blank');await page.goto(savedLessonURL);
+  await open('Song-section map');assert.ok(await button('Intro into Answer').isVisible());await close();
 
-  await page.click('#quickStart');await page.locator('#recallDialog[open]').waitFor();
+  await nav('Practice');await page.click('#quickStart');await page.locator('#recallDialog[open]').waitFor();
   await page.click('#closeRecall');await page.click('#quickNext');
   assert.match(await page.locator('#phrase').inputValue(),/^notes-/);
   await page.click('#step');await page.waitForTimeout(1100);await page.click('#quickPause');
@@ -98,7 +99,7 @@ module.exports=async function(page,assert){
   const done=await page.evaluate(()=>JSON.stringify(store.done));
   await page.reload();await page.waitForTimeout(1200);
   assert.equal(await page.evaluate(()=>store.quickSession.remaining),saved.remaining);
-  await page.click('#quickStart');
+  await nav('Practice');await page.click('#quickStart');
   assert.deepEqual(await page.evaluate(()=>practiceSnapshot()),saved.position);
   await page.click('#quickNext');assert.match(await page.locator('#quickTitle').innerText(),/Play music/);
   await page.click('#quickNext');assert.ok(await page.locator('#quickPanel').isHidden());

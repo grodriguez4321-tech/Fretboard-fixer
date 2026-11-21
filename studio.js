@@ -40,6 +40,10 @@ function nextIndex() {
 }
 function describe(event) {
   if (!event) return ['End of phrase', ''];
+  if(event.names?.length){
+    const action=event.continuation?'Hold':event.action;
+    return [event.names.join(' + ')+' · '+action,event.positions.map(p=>stringNames[p.string-1]+' string · fret '+p.fret).join(' / ')];
+  }
   if (event.chord) {
     const shape = [6,5,4,3,2,1].map(s => event.positions.find(p => p.string===s)?.fret ?? '×');
     return [event.chord, shape.join(' ')+' · low E to high E'];
@@ -131,6 +135,10 @@ function drawNeck(event) {
     }
   }
 }
+function beatReadout(beat){
+  const count=Math.floor(beat+1e-8)+1;
+  return 'Beat '+count+(score().meter===0?'':' / '+(score().meter||4));
+}
 function paint() {
   const event = sequence[cursor], next = nextIndex();
   if (barShown !== event.bar) {buildStaff(event.bar);barShown=event.bar;}
@@ -148,7 +156,7 @@ function paint() {
   [$('now').textContent,$('placement').textContent]=describe(event);
   [$('upcoming').textContent,$('nextPosition').textContent]=describe(sequence[next]);
   $('barName').textContent='Bar '+(event.bar+1)+' · '+score().labels[event.bar];
-  $('count').textContent='Beat '+(event.beat+1)+' / 4';
+  $('count').textContent=beatReadout(event.beat);
   $('play').textContent=playing?'Pause':finished?'Replay':'Play';
   $('play').dataset.playing=String(playing);
   drawNeck(event);
@@ -191,7 +199,7 @@ function sound(event,time,seconds) {
     const start=event.from!=null ? pitchAt(string,event.from).hz : hz;
     const target=event.action==='Half-step bend' ? hz*2**(1/12) : start!==hz ? hz : null;
     const amplitude=event.chord ? .048 : ['Hammer-on','Pull-off'].includes(event.action) ? .10 : .15;
-    voice(start,Math.max(.09,Math.min(seconds*.93,2.3)),time+i*.009,amplitude,target);
+    voice(start,Math.max(.09,Math.min(seconds*.93,event.names?12:2.3)),time+(event.names?0:i*.009),amplitude,target);
   });
 }
 async function audition(event) {
@@ -233,19 +241,20 @@ async function play() {
         for(let i=cursor+1;i<sequence.length && sequence[i].continuation && sequence[i].sourceIndex===event.sourceIndex;i++)beats+=sequence[i].beats;
         sound(event,due,seconds*beats);
       }
-      if($('clickTrack').checked && Number.isInteger(event.beat+elapsed))
+      if($('clickTrack').checked && Math.abs(event.beat+elapsed-Math.round(event.beat+elapsed))<1e-8)
         voice(event.beat+elapsed===0?1250:890,.045,due,.11,null,'sine');
     }
     const soundingBeat=event.beat+elapsed;
     timeout=setTimeout(()=>{
       if(token!==generation)return;
       if(elapsed===0)paint();
-      $('count').textContent='Beat '+(Math.floor(soundingBeat)+1)+' / 4';
-      elapsed+=.5;
-      due+=seconds/2;
+      $('count').textContent=beatReadout(soundingBeat);
+      const step=Math.min(.5,event.beats-elapsed,Math.floor(soundingBeat+1+1e-8)-soundingBeat);
+      elapsed+=step;
+      due+=seconds*step;
       timeout=setTimeout(()=>{
         if(token!==generation)return;
-        if(elapsed>=event.beats){
+        if(elapsed>=event.beats-1e-8){
           const next=nextIndex();
           if(next<0){timeout=setTimeout(()=>{finished=true;haltPlayback();paint()},Math.max(0,(due-clock())*1000));return}
           freshAttack=next===0;
@@ -275,7 +284,7 @@ function refreshRange(){
     const select=$(id);select.replaceChildren();
     for(const e of events.filter(e=>!e.continuation)){
       const pos=e.positions[0];
-      const label=e.chord || (pos ? stringNames[pos.string-1]+' '+pos.fret : e.action);
+      const label=e.names?.length ? e.names.join('+') : e.chord || (pos ? stringNames[pos.string-1]+' '+pos.fret : e.action);
       select.add(new Option((e.sourceIndex+1)+'. '+label+' · bar '+(e.bar+1)+' beat '+(e.beat+1),e.sourceIndex));
     }
     select.value=String(value);
@@ -292,7 +301,7 @@ function applyRange(expand){
 $('applyRange').onclick=()=>applyRange(false);
 $('growRange').onclick=()=>applyRange(true);
 function showLog() {
-  $('complete').textContent=store.done[active.id]?'Mark incomplete':'Mark complete';
+  $('exerciseGoal').textContent=active.goal;
   const best=store.bests[bestKey()];
   $('best').textContent=best?'Personal best · '+best+' BPM':'No clean tempo logged yet';
 }
@@ -348,20 +357,32 @@ function openLesson(ex) {
   $('level').value=String(Math.max(0,Math.min(chromaticLevels.length-1,Number(store.chromaticLevel)||0)));
   $('lessonTitle').textContent=ex.name;
   const section=sections.find(s=>s.items.includes(ex));
-  $('category').textContent=(section ? section.title.split(' · ')[0] : 'My riffs')+' · '+Math.round(ex.duration/60)+' min';
+  $('category').textContent=(section ? section.title.split(' · ')[0] : songLessons.has(ex.id)?'Song lesson':'My riffs')+' · '+Math.round(ex.duration/60)+' min';
   $('copyRiff').hidden=!riffLessons.has(ex.id);
   $('objective').textContent=score().aim;
   $('phrase').replaceChildren(new Option('All measures','all'));
   score().labels.forEach((name,i)=>$('phrase').add(new Option('Bar '+(i+1)+' · '+name,i)));
   const guide=$('guideContent'), instructions=element('ol',null,'steps');
   const steps=ex.id==='chromatic' && levelNumber()>0 ? [score().aim,'Count 1 & 2 & 3 & 4 &. Pick down on each number and up on each &.','Loop both bars and keep every note the same length.'] : ex.steps;
+  $('firstStep').textContent=steps[0];
   for(const step of steps)instructions.append(element('li',step));
   guide.replaceChildren(instructions);
   for(const [label,detail] of [['Start at',ex.bpm+' BPM'],['Completion goal',ex.goal],['Next challenge',ex.id==='chromatic' && levelNumber()<3 ? 'After five clean full passes, try the '+chromaticLevels[levelNumber()+1].name.toLowerCase()+' level at the same tempo.' : score().next]]){
     const row=element('p');row.append(element('strong',label+' · '),detail);guide.append(row);
   }
   $('explore').textContent='Tap a fret to hear its pitch. The thin high E string is on top.';
+  $('songNotes').hidden=!songLessons.has(ex.id);
+  if(!$('songNotes').hidden){
+    $('noteBars').replaceChildren(...score().bars.map((bar,i)=>{
+      const row=element('button',null,'notes-row');
+      row.append(element('strong','Bar '+(i+1)),element('span',bar.map(e=>e.continuation?'hold '+e.names.join('+'):e.names.length?e.names.join('+'):'rest').join('  ·  ')));
+      row.onclick=()=>{selectPhrase(String(i));rebuildPhrase();$('play').focus();};
+      return row;
+    }));
+    $('sourceNotes').textContent='Source tempo '+score().sourceBpm+' BPM. '+score().comments.join(' ');
+  }
   buildQuiz();rebuildPhrase();showLog();render();
+  document.dispatchEvent(new Event('lessonopened'));
 }
 chromaticLevels.forEach((level,i)=>$('level').add(new Option(level.name,i)));
 $('level').onchange=()=>{store.chromaticLevel=levelNumber();save();openLesson(active)};
@@ -378,7 +399,7 @@ function refreshRiffPicker(){
   let group=$('lesson').querySelector('[data-riffs]');
   if(!group){group=element('optgroup');group.label='My riffs';group.dataset.riffs='true';$('lesson').append(group)}
   group.replaceChildren();
-  for(const ex of riffLessons.values())group.append(new Option(ex.name,ex.id));
+  for(const ex of [...riffLessons.values(),...songLessons.values()])group.append(new Option(ex.name,ex.id));
 }
 refreshRiffPicker();
 $('lesson').onchange=()=>openLesson(lessonById($('lesson').value));
@@ -392,11 +413,6 @@ $('slower').onclick=()=>setBpm(tempo()-5);$('faster').onclick=()=>setBpm(tempo()
 $('saveBest').onclick=()=>{
   store.bests[bestKey()]=Math.max(Number(store.bests[bestKey()])||0,tempo());
   store.days[new Date().toLocaleDateString('en-CA')]=true;save();showLog();updateStats();
-};
-$('complete').onclick=()=>{
-  store.done[active.id]=!store.done[active.id];
-  if(store.done[active.id])store.days[new Date().toLocaleDateString('en-CA')]=true;
-  save();showLog();render();
 };
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){haltPlayback();stopMetro();if(timerRunning){tick();pauseTimer()}}

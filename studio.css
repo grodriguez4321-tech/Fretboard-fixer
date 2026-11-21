@@ -139,3 +139,56 @@ dialog::backdrop{background:#0b241cc7}#recallDialog{width:min(94vw,490px)}#recal
 #play{display:inline-flex;align-items:center;justify-content:center;gap:8px}
 #play::before{content:"";border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent currentColor}
 #play[data-playing=true]::before{height:10px;width:3px;border:0;border-inline:3px solid currentColor;box-sizing:content-box}
+
+/* Daily checklist and separate practice, tools and journal views. */
+.brandbar nav a[aria-current=page]{color:var(--accent);box-shadow:inset 0 -2px var(--accent)}
+.brandbar nav a:first-child{display:inline-grid}
+.daily-hero .riff-launch{align-items:stretch}
+.start-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 15px;border-radius:9px;color:#233829;background:#f1ce94;font-weight:700;text-decoration:none}
+.daily-hero #quickStart{background:#183d32e8;border:1px solid #879f8b;color:#fcf6e8}
+.checklist-heading,.group-head,.daily-count{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.checklist-heading{margin:clamp(18px,3vw,32px) 0 12px;flex-wrap:wrap}
+.daily-count{font-size:.85rem;font-weight:650;color:var(--muted)}
+progress{accent-color:var(--accent);width:75px;height:7px;border:0;border-radius:5px;overflow:hidden;background:var(--line)}
+progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress-value{background:var(--accent)}
+#sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.checklist-group{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:0 16px;box-shadow:var(--shadow)}
+.group-head{border-bottom:1px solid var(--line);padding:12px 0 10px}
+#sections .group-head h3{margin:0;font-size:1.04rem}
+.group-head span,.exercise-row small{color:var(--muted);font-size:.8rem}
+.exercise-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto 10px;align-items:center;gap:10px;min-height:55px;padding:8px 0;text-decoration:none;color:var(--txt)}
+.exercise-row+.exercise-row{border-top:1px solid var(--line)}
+.exercise-row::after{content:'›';font-size:1.25rem;color:var(--muted)}
+.exercise-row strong{font-size:.94rem;font-weight:600;line-height:1.32}
+.check{display:grid;place-items:center;border:1.6px solid var(--muted);border-radius:50%;width:20px;height:20px;font-size:.78rem;font-weight:bold}
+.is-done .check{background:var(--accent);border-color:var(--accent);color:var(--card)}
+.exercise-row:hover strong,.back-link:hover{text-decoration:underline}
+#finishNotice:not(:empty){margin:9px 0;color:var(--accent)}
+.page-heading{padding:20px 0 10px}.page-heading h1{font:500 clamp(2rem,4vw,3.4rem)/1.08 var(--headline);letter-spacing:-.04em}
+.back-link{display:inline-flex;align-items:center;min-height:44px;color:var(--accent);font-weight:650;text-decoration:none}
+.studio .lesson-head{padding-block:clamp(17px,2vw,26px)}.studio .lesson-head h1{font-size:clamp(1.9rem,4vw,3rem)}
+#exerciseTools{margin-left:auto}#focusMode{margin-left:0}
+.first-step{margin:0 0 12px;color:var(--muted)}.first-step::before{content:'Start here · ';font-weight:700;color:var(--txt)}
+.finish-bar{position:sticky;bottom:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px max(10px,env(safe-area-inset-bottom));box-shadow:0 -4px 18px #15332812}
+.finish-bar p{font-size:.86rem;color:var(--muted)}.finish-bar strong{font-size:.82rem}#complete{min-width:84px}
+.practice-focus .first-step,.practice-focus .back-link{display:none}
+#toolTiles{margin:12px 0 18px}
+@media(max-width:650px){
+  #sections{grid-template-columns:minmax(0,1fr)}.checklist-group{padding-inline:12px}
+  .brandbar{gap:5px}.brandbar nav{gap:10px}.brandbar nav a{font-size:.8rem}
+  .finish-bar{padding-inline:10px}.finish-bar p{font-size:.78rem}
+}
+@media(max-width:380px){
+  .brandbar{flex-wrap:wrap;gap:0;padding-top:8px}
+  .brandbar nav{width:100%;justify-content:space-between}
+  .brandbar nav a{min-width:60px;text-align:center}
+}
+.checklist-feedback{display:flex;align-items:center;gap:10px}
+#undoDone{min-height:44px;background:transparent;border:0;color:var(--accent);text-decoration:underline}
+
+.abc-import{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-weight:650}
+.abc-import input{max-width:100%;font:inherit}
+.notes-row{display:flex;gap:15px;width:100%;text-align:left;margin-top:7px}
+.notes-row strong{white-space:nowrap}.notes-row span{font-family:var(--mono);font-weight:500}
+#sourceNotes,#abcStatus{margin:10px 0}.practice-focus #songNotes{display:none}
+@media(max-width:480px){.brandbar{flex-wrap:wrap;padding-top:8px;gap:0}.brandbar nav{width:100%;justify-content:space-between}}
