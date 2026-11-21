@@ -32,7 +32,7 @@ lab.add('sections','Song-section map','Save an intro, verse or chorus from a rif
     else{last=e.sourceIndex;first=Math.min(first,last)}
     occurrence.replaceChildren();drawRange();
     msg.textContent=(was==='start'?'Start':'End')+' set to '+eventName(e)+(was==='start'?'. Tap the end note.':'.');
-    (was==='start'?endButton:startButton).focus({preventScroll:true});
+    endButton.focus({preventScroll:true});
   }
   const speed=lab.select('Practice BPM',Array.from({length:29},(_,i)=>[40+5*i,40+5*i]),tempo());
   const msg=lab.status(),list=element('div'),barPicker=element('div',null,'bar-picker');
@@ -90,7 +90,7 @@ lab.add('sections','Song-section map','Save an intro, verse or chorus from a rif
     store.songSections.push({id:crypto.randomUUID(),lesson:song.input.value,name,first:a,last:b,bpm:Number(speed.input.value)});
     save();title.value='';msg.textContent='Section saved on this device.';renderList();
   },'primary');
-  lab.body.append(song.box,lab.row(startButton,endButton),element('p','Tap a marked fret to set the start or end. For a whole bar, tap its number below.'),
+  lab.body.append(lab.fields(song.box),lab.row(startButton,endButton),element('p','Tap the first fret, then the last fret. If a note repeats, choose its bar.'),
     board.root,occurrence,silent,barPicker,view.surface,lab.fields(nameLabel,speed.box),add,msg,list);
   song.input.onchange=loadNotes;loadNotes();
 });

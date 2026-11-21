@@ -12,6 +12,10 @@ module.exports=async function(page,assert,choose,nav){
       await open(name);
       const graph=box.locator('#labBody > .tool-visual svg');
       assert.ok(await graph.isVisible(),name+' diagram');
+      if(name==='Alternate fingerings' || name==='Song-section map'){
+        const size=await box.locator('.touch-fret').first().boundingBox();
+        assert.ok(size.width>=44 && size.height>=44,name+' tap target at '+width);
+      }
       assert.ok((await graph.getAttribute('aria-label')).length>4);
       assert.ok(await box.evaluate(d=>d.scrollWidth<=d.clientWidth+1),name+' width '+width);
     }
@@ -19,6 +23,9 @@ module.exports=async function(page,assert,choose,nav){
   }
   await open('Alternate fingerings');
   const cell=(string,fret)=>box.locator('.touch-fret[data-string="'+string+'"][data-fret="'+fret+'"]');
+  await cell(6,0).click();assert.equal(await box.locator('h3').innerText(),'E2');
+  await button('Frets 21 to 24').click();await cell(1,24).click();
+  assert.equal(await box.locator('h3').innerText(),'E6');
   await button('Frets 9 to 12').click();await cell(2,10).click();
   assert.ok(await button('high E string · fret 5').isVisible());
   await button('high E string · fret 5').click();
