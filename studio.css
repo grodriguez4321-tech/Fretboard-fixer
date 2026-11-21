@@ -26,3 +26,5 @@ button{touch-action:manipulation}button:hover,select:hover{border-color:var(--mi
 @media(max-width:650px){.lesson-head{display:grid;gap:10px;padding:16px 0 12px}.choose{max-width:none}.choose select{width:100%}.brandbar{min-height:54px}.brandbar nav{gap:10px}.brandbar nav a:first-child{display:none}.surface{padding:12px}.readouts{gap:6px;margin:10px 0}.readouts>div{padding:8px}.sound-row{gap:8px}.transport{gap:5px}.transport button{padding:8px 4px}.measure{font-size:0}.measure select{font-size:.88rem;max-width:145px}.card{margin:12px 0}.fret{min-height:38px}.mini{padding:8px 3px}.score-head h2,.neck-head h2{font-size:1.2rem}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 #levelRow{margin-bottom:10px;color:var(--muted);font-size:.88rem}#levelRow select{font-size:.9rem;min-height:40px;margin-left:5px}.choose select,.measure select,#level{background-color:#25332c}.timer,.stat{color:var(--txt)}
+
+.fret.selected span{display:inline-flex;align-items:center;gap:2px}.fret sup{font-size:.62em;align-self:flex-start}.fret[aria-pressed=true]{box-shadow:none;border-right-color:#7a826d}

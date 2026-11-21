@@ -105,7 +105,10 @@ function drawNeck(event) {
     cell.classList.toggle('blank',!pos && !$('names').checked);
     cell.style.setProperty('--finger',colors[pos?.finger || 0]);
     const label = pitchAt(s,f).name;
-    cell.firstChild.textContent = pos ? label + (pos.finger || '°') : label;
+    const marker=cell.firstChild;
+    marker.textContent=label;
+    if(pos) marker.append(element('sup',pos.finger || '°'));
+    cell.setAttribute('aria-pressed',String(!!pos));
   }
 }
 function paint() {
