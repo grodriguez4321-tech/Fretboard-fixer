@@ -110,6 +110,13 @@ dialog::backdrop{background:#0b241cc7}#recallDialog{width:min(94vw,490px)}#recal
 .riff-settings{display:flex;flex-wrap:wrap;align-items:end;gap:8px 14px;margin:12px 0}
 .riff-settings label,#riffDialog>label{display:grid;grid-template-columns:minmax(0,1fr);gap:3px;min-width:0;max-width:100%;color:var(--muted);font-size:.88rem}
 .riff-settings label>select,.riff-settings label>input{width:100%;overflow:hidden}
+.riff-settings label{overflow:clip;padding:3px;margin:-3px}
+.range-tool,.score-head,.lab-panel,.readouts{overflow-wrap:anywhere}
+.measure select{overflow:hidden}
+@media(max-width:600px){
+  .measure{overflow:clip;padding:3px;margin:-3px}
+  .riff-settings select{inline-size:100%;max-inline-size:100%}
+}
 #riffName{width:100%}#entryNeck{display:grid;grid-template-columns:1.1em repeat(var(--cols),minmax(0,1fr));gap:2px;text-align:center;align-items:center;margin:10px 0}
 #entryNeck b{font-size:.84rem}#entryNeck button{padding:2px;font:.87rem var(--mono);border-radius:5px}
 #draftNotes{display:flex;flex-wrap:wrap;gap:5px;max-height:148px;overflow:auto}#riffDialog h3,#noteEdit{margin:10px 0 5px}

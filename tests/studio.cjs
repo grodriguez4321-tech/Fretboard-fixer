@@ -224,7 +224,11 @@ for(const width of [320,390,768,1440]){
   await page.setViewportSize({width,height:800});await page.click('#newRiff');
   assert.ok(await page.locator('#riffDialog').evaluate(d=>d.scrollWidth<=d.clientWidth+1));
   await page.click('#closeRiff');
-  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  const overflow=await page.evaluate(()=>{
+    if(document.documentElement.scrollWidth<=innerWidth+1)return null;
+    return {width:innerWidth,page:document.documentElement.scrollWidth,elements:[...document.querySelectorAll('main *')].filter(e=>e.clientWidth && (e.scrollWidth>e.clientWidth+1 || e.getBoundingClientRect().right>innerWidth+1)).slice(0,30).map(e=>[e.id||e.className||e.tagName,e.clientWidth,e.scrollWidth,Math.round(e.getBoundingClientRect().right)])};
+  });
+  assert.equal(overflow,null,JSON.stringify(overflow));
 }
 console.log('PASS riff editing, draft recovery, sustained notes, cross-bar loop bounds, count-in, gap, expansion, custom recall and export.');
 
