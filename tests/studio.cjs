@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','studio.css'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','studio.css'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':'text/html');fs.createReadStream(file).pipe(res);
@@ -155,6 +155,78 @@ assert.ok(await page.locator('#recallDialog').evaluate(d=>d.scrollWidth<=d.clien
 await page.keyboard.press('Escape');
 assert.equal(await page.locator('#recallDialog').isVisible(),false);
 console.log('PASS phrase training, repair, tempo change, cue-free recall, delayed review, target restoration and phone dialog.');
+
+await page.click('#newRiff');
+await page.fill('#riffName','B-string 10–9');
+await page.selectOption('#riffWindow','6');
+const fretButton=n=>page.getByRole('button',{name:'Add B string fret '+n,exact:true});
+for(const fret of [10,9,10])await fretButton(fret).click();
+await page.selectOption('#riffLength','2');await fretButton(9).click(); // beats 4 to 1 of bar two
+await page.selectOption('#riffLength','0.5');await page.click('#addRest');
+await page.click('#undoNote');await page.click('#addRest');
+await page.click('#closeRiff');await page.reload();await page.click('#newRiff');
+assert.equal(await page.locator('#riffName').inputValue(),'B-string 10–9');
+assert.equal(await page.locator('#draftNotes button').count(),5);
+await page.locator('#draftNotes button').first().click();await page.click('#replaceNote');
+await page.selectOption('#riffWindow','6');await fretButton(10).click();
+await page.click('#saveRiff');
+const riffId=await page.locator('#lesson').inputValue();
+assert.ok(riffId.startsWith('riff-'));
+assert.equal(await page.locator('#lessonTitle').innerText(),'B-string 10–9');
+assert.equal(await page.locator('#placement').innerText(),'B string · fret 10 · your fingering');
+assert.deepEqual(await page.evaluate(()=>sequence.map(n=>[n.sourceIndex,n.bar,n.beats,n.continuation])),
+  [[0,0,1,false],[1,0,1,false],[2,0,1,false],[3,0,1,false],[3,1,1,true],[4,1,.5,false]]);
+await page.locator('#rangeTool summary').click();
+await page.selectOption('#rangeFirst','3');await page.selectOption('#rangeLast','4');await page.click('#applyRange');
+assert.equal(await page.locator('#phrase').inputValue(),'notes-3-4');
+assert.equal(await page.locator('#loop').getAttribute('aria-pressed'),'true');
+await page.evaluate(()=>setBpm(180));
+await page.selectOption('#rangeGap','2');
+await page.evaluate(()=>{
+  window.riffSounds=[];
+  const previous=sound;
+  sound=(e,time,length)=>{window.riffSounds.push({action:e.action,index:e.sourceIndex,time,length});previous(e,time,length)};
+});
+await page.click('#play');
+await page.waitForFunction(()=>document.getElementById('count').textContent.startsWith('Count in'));
+await page.waitForFunction(()=>window.riffSounds.filter(e=>e.action==='Pick').length>=2);
+await page.click('#play');
+const sounding=await page.evaluate(()=>window.riffSounds.filter(e=>e.action==='Pick'));
+assert.ok(sounding.every(e=>e.index===3 && Math.abs(e.length-2/3)<.01));
+assert.ok(sounding[1].time-sounding[0].time>=1.43,'reset gap should separate repeated notes');
+await page.click('#growRange');assert.equal(await page.locator('#phrase').inputValue(),'notes-2-4');
+await page.click('#coachStart');
+assert.match(await page.locator('#coachHint').innerText(),/notes 3–5/);
+await page.click('#repMiss');assert.doesNotMatch(await page.locator('#repStatus').innerText(),/undefined/);
+await page.click('#repClean');await page.click('#repClean');
+await page.getByRole('button',{name:'Try original phrase from memory'}).click();
+await page.getByRole('button',{name:'Needed a cue'}).click();await page.click('#closeRecall');
+await page.evaluate(id=>{store.phraseReviews[id+'/0/notes-2-4'].due=Date.now()-1;save()},riffId);
+await page.reload();await page.click('#startReview');
+assert.match(await page.locator('#recallTarget').innerText(),/notes 3–5/i);
+await page.getByRole('button',{name:'Needed a cue'}).click();
+await page.getByRole('button',{name:'Practice this phrase',exact:true}).click();
+assert.equal(await page.locator('#lesson').inputValue(),riffId);
+assert.equal(await page.locator('#phrase').inputValue(),'notes-2-4');
+assert.equal(await page.locator('#speed').innerText(),'180 BPM');
+await page.click('#copyRiff');assert.equal(await page.locator('#draftNotes button').count(),5);
+await page.locator('#draftNotes button').last().click();await page.click('#deleteNote');
+assert.equal(await page.locator('#draftNotes button').count(),4);await page.click('#saveRiff');
+assert.notEqual(await page.locator('#lesson').inputValue(),riffId);
+const exported=page.waitForEvent('download');await page.click('#export');
+const backup=JSON.parse(fs.readFileSync(await (await exported).path()));
+assert.equal(backup.riffs.length,2);assert.equal(backup.riffs[0].events.length,5);
+await page.selectOption('#lesson','chromatic');
+await page.locator('#rangeTool').evaluate(el=>el.open=true);
+await page.selectOption('#rangeFirst','3');await page.selectOption('#rangeLast','4');await page.click('#applyRange');
+assert.deepEqual(await page.evaluate(()=>sequence.map(e=>e.bar)),[0,1]);
+for(const width of [320,390,768,1440]){
+  await page.setViewportSize({width,height:800});await page.click('#newRiff');
+  assert.ok(await page.locator('#riffDialog').evaluate(d=>d.scrollWidth<=d.clientWidth+1));
+  await page.click('#closeRiff');
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+}
+console.log('PASS riff editing, draft recovery, sustained notes, cross-bar loop bounds, count-in, gap, expansion, custom recall and export.');
 
 assert.deepEqual(errors,[]);console.log('PASS progression, timing, loop boundaries, transport, metronome handoff, blind quiz, note quiz, timer expiry, completion, export, legacy persistence.');
 }finally{await browser?.close();server.close()}
