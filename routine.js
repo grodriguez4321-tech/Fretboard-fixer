@@ -190,7 +190,22 @@ function render(){
   $('nextExercise').hidden=!next;
   if(next){$('nextExercise').href='#exercise/'+next.id;$('nextExercise').textContent=count?'Continue practice':'Start practice'}
   else $('finishNotice').textContent='All exercises complete for today.';
-  $('songList').replaceChildren(...Array.from(songLessons.values(),ex=>exerciseLink(ex,done[ex.id])));
+  const manager=$('manageSongs');
+  manager.hidden=!songLessons.size;
+  if(manager.hidden){manager.setAttribute('aria-pressed','false');manager.textContent='Manage songs'}
+  $('songList').replaceChildren(...Array.from(songLessons.values(),ex=>{
+    const row=element('div',null,'song-row');row.append(exerciseLink(ex,done[ex.id]));
+    if(manager.getAttribute('aria-pressed')==='true'){
+      const actions=element('div',null,'song-actions');
+      for(const action of ['Replace','Remove']){
+        const button=element('button',action);
+        button.dataset.action=action;button.dataset.song=ex.id;
+        button.setAttribute('aria-label',action+' '+ex.name);actions.append(button);
+      }
+      row.append(actions);
+    }
+    return row;
+  }));
   if(!songLessons.size)$('songList').textContent='Your imported song lessons will appear here.';
   $('savedRiffs').hidden=!riffLessons.size;
   $('riffList').replaceChildren(...Array.from(riffLessons.values(),ex=>exerciseLink(ex,done[ex.id])));

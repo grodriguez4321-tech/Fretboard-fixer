@@ -176,6 +176,7 @@
       stopClick();if ($('recallClick')) $('recallClick').textContent='Start click';
     } else refreshQueue();
   });
+  document.addEventListener('songlibrarychange',refreshQueue);
   window.addEventListener('pageshow',refreshQueue);
   window.addEventListener('focus',refreshQueue);
   setInterval(refreshQueue,60000);

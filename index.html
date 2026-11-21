@@ -75,8 +75,10 @@
 </section>
 <section id="songsPage" hidden aria-labelledby="songsTitle">
   <header class="lesson-head daily-hero"><div class="category">Song practice</div><h1 id="songsTitle" tabindex="-1">My song lessons</h1><p>Choose an excerpt to practice its notes one bar at a time.</p></header>
+  <button id="manageSongs" type="button" aria-pressed="false" aria-controls="songList" hidden>Manage songs</button>
   <div id="songList" class="card"></div>
-  <label class="abc-import">Add ABC excerpts <input id="abcFiles" type="file" accept=".abc,text/plain" multiple></label><p class="hint" role="status" id="abcStatus"></p><button id="undoSong" hidden>Undo</button>
+  <input type="file" id="replacementAbc" accept=".abc,text/plain" hidden>
+  <label class="abc-import">Add ABC excerpts <input id="abcFiles" type="file" accept=".abc,text/plain" multiple></label><p class="hint" role="status" id="abcStatus"></p><button id="undoSong" hidden>Undo</button><button id="restoreSong" hidden>Undo removal</button>
 </section>
 <section id="toolsPage" hidden aria-labelledby="toolsTitle"><header class="page-heading"><h1 id="toolsTitle" tabindex="-1">Learning tools</h1></header>
   <div id="toolTiles" class="tool-menu"></div>
