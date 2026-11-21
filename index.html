@@ -80,10 +80,11 @@
 </section>
 <section id="toolsPage" hidden aria-labelledby="toolsTitle"><header class="page-heading"><h1 id="toolsTitle" tabindex="-1">Learning tools</h1></header>
   <div id="toolTiles" class="tool-menu"></div>
+  <details class="more-tools" id="moreTools"><summary>More tools</summary><div id="otherTiles" class="tool-menu"></div>
   <section class="card riff-tool"><h2>Riff builder</h2><div id="riffPreview" class="riff-ribbon" role="img"></div><p>Tap the fretboard to write a phrase, then play it in the studio.</p><button id="newRiff">Build a riff</button></section>
 
 <section class="card" id="metronome"><div class="row between"><h2>Standalone metronome</h2><span id="beatCount" class="pill">4 beats / bar</span></div><div class="row"><span class="bpm" id="bpmDisplay">60</span><span class="muted">BPM</span></div><input id="bpm" aria-label="Tempo" type="range" min="40" max="180" step="5" value="60"><div class="row between"><div class="row"><label for="beats">Beats</label><select id="beats"><option>2</option><option>3</option><option selected>4</option><option>6</option></select></div><button class="primary" id="metroBtn">Start click</button></div><div id="dots" class="dots" aria-label="Beat pattern"></div><p class="muted" style="font-size:.85rem">Tap Start to enable audio. Beat one is accented. Adjust tempo while playing.</p></section>
-</section>
+</details></section>
 <section id="journal" hidden aria-labelledby="journalTitle"><header class="page-heading"><h1 id="journalTitle" tabindex="-1">Practice journal</h1></header>
 <section class="card"><h2>Overall progress</h2><div class="grid" style="margin:16px 0"><div class="mini"><div id="doneCount" class="stat">0/11</div><div class="muted">exercises done</div></div><div class="mini"><div id="practiceTime" class="stat">0m</div><div class="muted">practice logged</div></div><div class="mini"><div id="streak" class="stat">0</div><div class="muted">practice days</div></div></div><button id="resetRoutine">Reset progress</button></section>
 <section class="card"><h2>Practice notes</h2><p class="muted">What got cleaner? Where did your fingers hesitate?</p><textarea id="notes" placeholder="Today I played the 5–8 pattern cleanly at 65 BPM..."></textarea><div class="row between" style="margin-top:12px"><span id="saved" class="muted">Saved on this device</span><button id="export">Export progress (.json)</button></div></section></section><footer>Practice pain-free: don't force large stretches. Move the whole hand, reduce the span, or shift positions. Your data stays in this browser unless exported.</footer></main>
@@ -121,6 +122,7 @@
 <script src="riff-editor.js"></script>
 <script src="coach.js"></script>
 <script src="learning-tools.js"></script>
+<script src="note-picker.js"></script>
 <script src="pitch-tools.js"></script>
 <script src="music-drills.js"></script>
 <script src="practice-plans.js"></script>

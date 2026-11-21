@@ -235,3 +235,24 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 .ear-neck button{background:linear-gradient(transparent 48%,var(--line) 49% 52%,transparent 53%),var(--panel);font:650 1rem var(--mono)}
 .ear-neck button[data-answer=correct]{background:var(--soft);border:2px solid var(--accent)}.ear-neck button[data-answer=retry]{border:2px dashed var(--muted)}
 .bar-picker{display:flex;flex-wrap:wrap;gap:5px;margin-block:8px}
+
+#toolTiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+.more-tools{margin-block:16px}
+.more-tools summary{cursor:pointer;padding:12px 4px;color:var(--muted);font-weight:650;min-height:44px}
+.position-picker{margin-block:8px 12px}
+.touch-neck{display:grid;grid-template-columns:24px repeat(5,minmax(0,1fr));align-items:stretch;background:#382d23;border:1px solid #766654;border-radius:10px;padding:6px 3px;color:#f2e7d6}
+.touch-neck b{align-self:center;text-align:center;font:650 .82rem/1.8 var(--mono)}
+.touch-neck .string-name{color:#e8d6b9}
+#labBody .touch-fret{position:relative;display:grid;place-items:center;min-height:44px;min-width:0;margin:0;padding:0;border:none;border-right:2px solid #a99a82;border-radius:0;background:linear-gradient(transparent 48%,#bfae92 50%,transparent 52%);color:#fff4df;font:600 .82rem var(--mono)}
+#labBody .touch-fret[data-fret="0"]{background-color:#29231e;border-right:3px solid #e9d8bb}
+#labBody .touch-fret span{border-radius:14px;min-width:23px;padding:2px 3px;background:#382d23}
+#labBody .touch-fret[data-mark=available] span{outline:1px solid #ddc38d;color:#ffdda3}
+#labBody .touch-fret[data-mark=selected] span{background:#b7efc0;color:#10281b;outline:2px solid #e3fbe8}
+#labBody .touch-fret:disabled{opacity:.48}
+.touch-fret:focus-visible{z-index:1}
+.neck-windows{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;margin-top:5px}
+#labBody .neck-windows button{margin:0;padding:2px;font:600 .78rem var(--mono)}
+.note-occurrences:not(:empty){border:1px solid var(--line);padding:8px;background:var(--soft);border-radius:8px}
+.note-occurrences button,.position-results button{margin:2px}
+.position-results h3{margin-block:8px}
+@media(max-width:520px){#toolTiles{grid-template-columns:1fr}}

@@ -5,6 +5,7 @@ const lab = (() => {
   function stop(){
     version++;cleanup();cleanup=()=>{};haltPlayback();
   }
+  const featured=id=>id==='fingers' || id==='sections';
   function tile(id,name,summary){
     const b=button(name,()=>open(id)),view=toolVisual.panel(id);
     const sample=[{string:2,fret:3},{string:3,fret:4}];
@@ -29,10 +30,10 @@ const lab = (() => {
     if(tool) tool.render();
     else {
       const menu=element('div',null,'tool-menu');
-      for(const [key,t] of tools){
-        menu.append(tile(key,t.name,t.summary));
-      }
-      body.append(menu);
+      const extra=element('details',null,'more-tools'), other=element('div',null,'tool-menu');
+      extra.append(element('summary','More tools'),other);
+      for(const [key,t] of tools)(featured(key)?menu:other).append(tile(key,t.name,t.summary));
+      body.append(menu,extra);
     }
   }
   function button(label,fn,cls){const b=element('button',label,cls);b.onclick=fn;return b}
@@ -60,7 +61,7 @@ const lab = (() => {
   return {body,dialog,open,stop,button,select,row,fields,status,audioReady,
     add:(id,name,summary,render)=>{
       tools.set(id,{name,summary,render});
-      $('toolTiles').append(tile(id,name,summary));
+      $(featured(id)?'toolTiles':'otherTiles').append(tile(id,name,summary));
     },
     onStop:fn=>{cleanup=fn},token:()=>version};
 })();
