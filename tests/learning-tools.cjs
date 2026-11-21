@@ -86,7 +86,8 @@ module.exports=async function(page,assert,choose,nav){
   await button('Practice Intro').click();assert.equal(await page.locator('#phrase').inputValue(),'notes-0-1');
   await page.click('#saveBest');await open('Song-section map');await box.getByText(/clean best 65 BPM/).waitFor();
   await button('Intro into Answer').click();assert.deepEqual(await page.evaluate(()=>sequence.map(n=>n.sourceIndex)),[1,3]);
-  await page.reload();await open('Song-section map');assert.ok(await button('Intro into Answer').isVisible());await close();
+  const savedLessonURL=page.url();await page.goto('about:blank');await page.goto(savedLessonURL);
+  await open('Song-section map');assert.ok(await button('Intro into Answer').isVisible());await close();
 
   await nav('Practice');await page.click('#quickStart');await page.locator('#recallDialog[open]').waitFor();
   await page.click('#closeRecall');await page.click('#quickNext');

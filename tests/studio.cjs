@@ -292,7 +292,7 @@ await nav('Songs');
 const sample='X:1\nT:Test study\nM:3/4\nL:1/8\nQ:1/4=90\nK:none\n(3CDE [G,B,]2 z2 | ^F2 F2-F2 | Z |]';
 await page.locator('#abcFiles').setInputFiles({name:'study.abc',mimeType:'text/plain',buffer:Buffer.from(sample)});
 await page.getByText('1 song lesson ready on this device.').waitFor();
-await page.locator('#songList a').click();
+await page.locator('#songList a').click();await page.locator('#noteBars button').first().waitFor();
 assert.equal(await page.locator('#noteBars button').count(),3);
 assert.deepEqual(await page.evaluate(()=>score().bars.map(b=>Math.round(b.reduce((a,e)=>a+e.beats,0)))),[3,3,3]);
 assert.equal(await page.evaluate(()=>score().bars[1][2].continuation),true);
