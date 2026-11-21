@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','studio.css'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':'text/html');fs.createReadStream(file).pipe(res);
@@ -228,6 +228,7 @@ for(const width of [320,390,768,1440]){
 }
 console.log('PASS riff editing, draft recovery, sustained notes, cross-bar loop bounds, count-in, gap, expansion, custom recall and export.');
 
+await require('./learning-tools.cjs')(page,assert);
 assert.deepEqual(errors,[]);console.log('PASS progression, timing, loop boundaries, transport, metronome handoff, blind quiz, note quiz, timer expiry, completion, export, legacy persistence.');
 }finally{await browser?.close();server.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

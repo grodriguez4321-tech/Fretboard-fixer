@@ -156,6 +156,12 @@
     const t={...pendingReview};
     finishStudy();pauseTimer();memoryTest(t,true);
   };
+  document.addEventListener('openphrasereview',event=>{
+    const {key,target}=event.detail;
+    const saved=store.phraseReviews[key];
+    const t=saved || target;
+    if(t && lessonOf(t)){finishStudy();pauseTimer();memoryTest({lesson:t.lesson,level:t.level,phrase:t.phrase,bpm:t.bpm},!!saved && saved.due<=Date.now())}
+  });
   $('closeRecall').onclick=()=>dialog.close();
   dialog.addEventListener('close',stopClick);
   document.addEventListener('practicephrasechange',()=>finishStudy());

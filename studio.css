@@ -51,3 +51,16 @@ button{touch-action:manipulation}button:hover,select:hover{border-color:var(--mi
 #riffName{min-width:0;width:100%;border:1px solid var(--line);background:var(--panel);color:var(--txt);border-radius:7px;padding:10px;font:inherit;font-size:1rem}
 #entryNeck{display:grid;grid-template-columns:1.15em repeat(var(--cols),minmax(0,1fr));align-items:center;margin:10px 0;gap:2px;text-align:center}#entryNeck b{font-size:.83rem}#entryNeck button{padding:2px;border-radius:5px;font:.87rem ui-monospace,monospace;min-height:42px}
 #draftNotes{display:flex;flex-wrap:wrap;gap:5px;max-height:145px;overflow:auto}#draftNotes button{padding:5px 8px;font-size:.84rem}#riffDialog h3{margin:15px 0 6px}#noteEdit{margin-top:6px}#draftStatus{font-size:.9rem;color:var(--muted)}.riff-launch [hidden]{display:none}
+
+.riff-launch{flex-wrap:wrap}
+#labDialog{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:16px;width:min(95vw,640px);max-height:90vh;max-height:90dvh;overflow:auto;padding:clamp(14px,3vw,25px)}
+#labDialog::backdrop{background:#0a1410ed}#labDialog .score-head h2{line-height:1.15}
+#labBody p,#quickPanel p{line-height:1.45}#labBody select,#labBody input{min-width:0;max-width:100%;font:inherit}
+#labBody input{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px}
+#labBack{margin-top:16px}.tool-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:15px}
+.tool-menu button{text-align:left}.tool-menu small{display:block;color:var(--muted);margin-top:4px}.lab-metric{font-size:1.16rem;font-weight:650;color:var(--mint)}
+.lab-panel{background:var(--panel);border-radius:10px;padding:10px;margin:9px 0}
+.tap-pad{width:100%;margin:12px 0;min-height:86px;font-weight:750;touch-action:manipulation}
+.quick-panel{border:1px solid var(--line);background:var(--card);padding:16px;border-radius:12px;margin:0 0 12px}
+#quickTime{font:600 1.2rem ui-monospace,monospace}#labDialog [hidden],#quickPanel[hidden]{display:none}
+@media(max-width:480px){.tool-menu{grid-template-columns:minmax(0,1fr)}}
