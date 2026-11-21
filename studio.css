@@ -108,7 +108,8 @@ dialog::backdrop{background:#0b241cc7}#recallDialog{width:min(94vw,490px)}#recal
 .tool-menu small{display:block;font-weight:400;color:var(--muted);line-height:1.45;margin-top:4px}
 .lab-metric{font-size:1.2rem;color:var(--accent);font-weight:670}.lab-panel{margin:10px 0}.tap-pad{width:100%;min-height:90px;background:var(--soft);margin:12px 0}
 .riff-settings{display:flex;flex-wrap:wrap;align-items:end;gap:8px 14px;margin:12px 0}
-.riff-settings label,#riffDialog>label{display:grid;gap:3px;min-width:0;color:var(--muted);font-size:.88rem}
+.riff-settings label,#riffDialog>label{display:grid;grid-template-columns:minmax(0,1fr);gap:3px;min-width:0;max-width:100%;color:var(--muted);font-size:.88rem}
+.riff-settings label>select,.riff-settings label>input{width:100%;overflow:hidden}
 #riffName{width:100%}#entryNeck{display:grid;grid-template-columns:1.1em repeat(var(--cols),minmax(0,1fr));gap:2px;text-align:center;align-items:center;margin:10px 0}
 #entryNeck b{font-size:.84rem}#entryNeck button{padding:2px;font:.87rem var(--mono);border-radius:5px}
 #draftNotes{display:flex;flex-wrap:wrap;gap:5px;max-height:148px;overflow:auto}#riffDialog h3,#noteEdit{margin:10px 0 5px}
@@ -124,7 +125,7 @@ dialog::backdrop{background:#0b241cc7}#recallDialog{width:min(94vw,490px)}#recal
   #levelRow{flex:0 1 110px}.lesson-settings button{font-size:.83rem;padding-inline:9px}
   .surface,.card{padding:13px}.playing-area,.practice-extras{gap:9px}.readouts{gap:5px;margin:10px 0}.readouts>div{padding:8px}
   .measure{font-size:0}.measure select{max-width:132px}.score-head,.neck-head{gap:5px}.transport button{padding-inline:5px}.sound-row{gap:5px 9px}.mini{padding:9px 6px}
-  .tool-menu{grid-template-columns:1fr}.legend{gap:5px 9px}dialog .riff-settings select,select,textarea{font-size:16px}
+  .tool-menu{grid-template-columns:1fr}.riff-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,146px),1fr))}.legend{gap:5px 9px}dialog .riff-settings select,select,textarea{font-size:16px}
 }
 @media(max-width:365px){.choose{flex-basis:100%}.lesson-settings{align-items:center}#levelRow{display:flex;flex:auto}.readouts small{font-size:.75rem}.sound-row{column-gap:6px}}
 
