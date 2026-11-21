@@ -1,0 +1,22 @@
+name: Practice studio checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  practice:
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install isolated browser test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/studio-qa" playwright@1.56.1
+          "$RUNNER_TEMP/studio-qa/node_modules/.bin/playwright" install --with-deps ${{ matrix.browser }}
+      - name: Exercise playback, layouts and saved progress
+        run: NODE_PATH="$RUNNER_TEMP/studio-qa/node_modules" node tests/studio.cjs ${{ matrix.browser }}
