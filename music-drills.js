@@ -108,22 +108,21 @@ lab.add('earMelody','Melody by ear','Hear an original phrase, sing it, then find
     for(let i=0;i<Number(size.input.value);i++){
       const choices=pool.filter(p=>p!==phrase.at(-1));phrase.push(choices[Math.floor(Math.random()*choices.length)]);
     }
-    answers.replaceChildren();
-    answers.append(element('span'));
-    for(const fret of [5,7,8])answers.append(element('span','Fret '+fret));
-    for(const p of pool){
-      if(p.fret===5)answers.append(element('span',stringNames[p.string-1]));
-      const key=lab.button(String(p.fret),()=>{
+    const board=guitarNeck('Melody answer fretboard',(position,key)=>{
       if(index>=phrase.length)return;
+      const p=pool.find(n=>n.string===position.string && n.fret===position.fret);
       ticket++;stopLights();silence();audition(asNote(p));
-      for(const k of answers.querySelectorAll('button'))k.removeAttribute('data-answer');
+      for(const k of board.cells)k.removeAttribute('data-answer');
       key.dataset.answer=p===phrase[index]?'correct':'retry';
       if(p===phrase[index]){index++;msg.textContent=index===phrase.length?'Play the whole phrase once on your guitar.':'Correct. Find the next note.'}
       else{misses++;msg.textContent='Try that note again. You can replay the phrase.'}
       draw();
-      });
-      key.setAttribute('aria-label',locationName(p));answers.append(key);
+    },locationName);
+    for(const key of board.cells){
+      key.disabled=!pool.some(p=>p.string===Number(key.dataset.string) && p.fret===Number(key.dataset.fret));
+      if(!key.disabled)key.dataset.mark='available';
     }
+    board.setTabStop(board.cellAt(2,5));answers.replaceChildren(board.root);board.reveal(7);
     msg.textContent='Listen and sing it back. Find each note on your guitar, then tap the matching position.';draw();hear();
   }
   function reset(){ticket++;stopLights();silence();phrase=[];index=0;hintIndex=-1;drawPhrase();answers.replaceChildren();progress.textContent='';msg.textContent='Choose New phrase when ready.'}
@@ -134,22 +133,36 @@ lab.add('earMelody','Melody by ear','Hear an original phrase, sing it, then find
 });
 
 lab.add('harmony','Chord and melody playground','Play a melody over two different backing chords and hear how its notes change character.',()=>{
-  const view=toolVisual.panel('harmony');
+  const view=element('div',null,'harmony-view'), shapesRow=lab.row(),shapeInfo=lab.status();
   const chords=Object.keys(shapes).map(s=>[s,s]);
   const first=lab.select('First chord',chords,'Am'),second=lab.select('Second chord',chords,'C');
   const bpm=lab.select('Tempo',[60,80,100].map(v=>[v,v+' BPM']),80);
-  const notes=[{string:2,fret:1},{string:2,fret:3},{string:1,fret:0},{string:1,fret:1},{string:1,fret:3},{string:1,fret:5},{string:1,fret:7}];
-  const melody=[],msg=lab.status(),line=element('p',null,'lab-metric'),keys=element('div',null,'log-buttons');
-  let timer,run=0;
-  const drawChords=(which=-1)=>toolVisual.chords(view,[first.input.value,second.input.value],which);
+  const melody=[],msg=lab.status(),line=element('p',null,'lab-metric');
+  let timer,run=0,shown=0;
+  const board=guitarNeck('Chord and melody fretboard',p=>{
+    if(melody.length===4){msg.textContent='Four notes entered. Undo one or compare the chords.';return}
+    stop();melody.push(p);audition(asNote(p));msg.textContent=locationName(p);draw();
+  });
+  const tabs=[0,1].map(i=>lab.button('',()=>{stop();shown=i;drawChords();board.reveal(1)}));
+  shapesRow.append(...tabs);view.append(shapesRow,board.root,shapeInfo);
+  function drawChords(playing=-1){
+    const index=playing<0?shown:playing, names=[first.input.value,second.input.value],shape=shapes[names[index]];
+    for(const [i,tab] of tabs.entries()){
+      tab.textContent=names[i]+' · chord '+(i+1);
+      tab.setAttribute('aria-pressed',String(i===index));
+    }
+    for(const key of board.cells){
+      const p=shape.find(([s,f])=>s===Number(key.dataset.string) && f===Number(key.dataset.fret));
+      key.dataset.mark=p?'selected':'';
+      key.firstChild.textContent=p?(p[1]?String(p[2]):'○'):key.dataset.pitch;
+    }
+    const muted=stringNames.filter((n,i)=>!shape.some(([s])=>s===i+1));
+    shapeInfo.textContent=(playing>=0?'Playing ':'')+names[index]+(muted.length?' · Skip '+muted.join(', '):' · Play all strings');
+  }
   function stop(){run++;clearTimeout(timer);silence();drawChords()}
   for(const f of [first,second,bpm])f.input.onchange=()=>{stop();msg.textContent=''};
   function label(p){return midiName(tuning[p.string-1]+p.fret)}
   function draw(){line.textContent=melody.length?melody.map(label).join('   '):'Tap up to four melody notes.'}
-  for(const p of notes)keys.append(lab.button(label(p),()=>{
-    if(melody.length===4){msg.textContent='Four notes entered. Undo one or compare the chords.';return}
-    stop();melody.push(p);audition(asNote(p));msg.textContent=locationName(p);draw();
-  }));
   async function play(compare){
     stop();const id=run;
     if(!await lab.audioReady(msg) || id!==run)return;
@@ -168,7 +181,7 @@ lab.add('harmony','Chord and melody playground','Play a melody over two differen
     };
     cycle();
   }
-  lab.body.append(view.surface,element('small','○ Open string · × Skip string · Dots show finger numbers','hint'),element('p','Enter a short melody, then compare it over both chords. Or loop the first chord and improvise on your guitar.'),lab.fields(first.box,second.box,bpm.box),keys,line,
+  lab.body.append(view,element('small','○ Open string · Highlighted numbers show which finger to use.','hint'),element('p','Tap the fretboard to enter a short melody, then compare it over both chords. Or loop the first chord and improvise on your guitar.'),lab.fields(first.box,second.box,bpm.box),line,
     lab.row(lab.button('Undo note',()=>{stop();melody.pop();draw()}),lab.button('Compare melody',()=>{if(melody.length)play(true);else msg.textContent='Add at least one melody note.'},'primary'),lab.button('Loop first chord',()=>play(false)),lab.button('Stop sound',()=>{stop();msg.textContent='Stopped.'})),msg);
   draw();drawChords();lab.onStop(stop);
 });

@@ -78,13 +78,7 @@ button:active:not(:disabled):not(.fret):not(.tabcol){transform:translateY(1px)}
 .sound-row label,.neck-head label{min-height:44px;display:inline-flex;align-items:center;gap:4px;font-size:.87rem}
 input[type=checkbox]{width:17px;height:17px;accent-color:#28745b}
 .neck-head{margin-bottom:10px}
-#neck{display:grid;grid-template-columns:22px repeat(var(--frets),minmax(0,1fr));align-items:stretch;padding:5px;background:linear-gradient(165deg,#46362a,#342b24);border-radius:9px;overflow:hidden;color:#f1e4cb}
-#neck b,.fret{text-align:center;font:.86rem var(--mono)}.fret-label{align-self:center;padding:4px 0;color:#edddc0}
-.fret{--wire:1px;border:0;border-radius:0;border-right:2px solid #aa947b;background:linear-gradient(transparent calc(50% - var(--wire)),#d3c3a9 50%,transparent calc(50% + var(--wire)));color:#f0e7d5;min-height:44px;padding:0}
-.fret[data-string="5"],.fret[data-string="6"]{--wire:2px}
-.fret.open{border-right:3px solid #e3cfaa}.fret span{background:#45372d;padding:1px 3px}.fret.blank span{opacity:0}
-.fret.selected span{display:inline-flex;align-items:center;justify-content:center;min-width:25px;min-height:24px;padding:2px 4px;background:var(--finger);color:#132419;font-weight:800;border-radius:20px}
-.fret sup{align-self:flex-start;font-size:.68em}.fret:focus-visible,.tabcol:focus-visible{outline-offset:-3px}
+.tabcol:focus-visible{outline-offset:-3px}
 .legend,.log-buttons,.row,.coach-top,.review-strip{flex-wrap:wrap}
 .legend{margin:10px 0;gap:6px 12px;font-size:.78rem}.finger{border-radius:50%;display:inline-grid;place-items:center;width:20px;height:20px;color:#112018;background:var(--finger);border:1px solid #0002}
 .practice-extras{display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:14px;margin:14px 0}
@@ -117,8 +111,7 @@ dialog::backdrop{background:#0b241cc7}#recallDialog{width:min(94vw,490px)}#recal
   .measure{overflow:clip;padding:3px;margin:-3px}
   .riff-settings select{inline-size:100%;max-inline-size:100%}
 }
-#riffName{width:100%}#entryNeck{display:grid;grid-template-columns:1.1em repeat(var(--cols),minmax(0,1fr));gap:2px;text-align:center;align-items:center;margin:10px 0}
-#entryNeck b{font-size:.84rem}#entryNeck button{padding:2px;font:.87rem var(--mono);border-radius:5px}
+#riffName{width:100%}
 #draftNotes{display:flex;flex-wrap:wrap;gap:5px;max-height:148px;overflow:auto}#riffDialog h3,#noteEdit{margin:10px 0 5px}
 .practice-focus :is(.brandbar,.lesson-head,.review-strip,.practice-extras,.guide,#logPanel,main>.card,footer){display:none}
 .practice-focus .lesson-settings{padding-top:12px}
@@ -229,29 +222,13 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
   .tool-menu small{grid-column:2;font-size:.83rem;margin:2px 0 0}
   .visual-heading{padding:8px 10px 0}
 }
-.ear-neck{display:grid;grid-template-columns:minmax(44px,.75fr) repeat(3,minmax(0,1fr));align-items:center;gap:4px;margin:12px 0}
 .ear-neck:empty{display:none}
-.ear-neck span{font-size:.85rem;text-align:center;color:var(--muted)}
-.ear-neck button{background:linear-gradient(transparent 48%,var(--line) 49% 52%,transparent 53%),var(--panel);font:650 1rem var(--mono)}
-.ear-neck button[data-answer=correct]{background:var(--soft);border:2px solid var(--accent)}.ear-neck button[data-answer=retry]{border:2px dashed var(--muted)}
 .bar-picker{display:flex;flex-wrap:wrap;gap:5px;margin-block:8px}
 
 #toolTiles{grid-template-columns:repeat(2,minmax(0,1fr))}
 .more-tools{margin-block:16px}
 .more-tools summary{cursor:pointer;padding:12px 4px;color:var(--muted);font-weight:650;min-height:44px}
 .position-picker{margin-block:8px 12px}
-.touch-neck{display:grid;grid-template-columns:24px repeat(5,minmax(44px,1fr));align-items:stretch;background:#382d23;border:1px solid #766654;border-radius:10px;padding:6px 3px;color:#f2e7d6}
-.touch-neck b{align-self:center;text-align:center;font:650 .82rem/1.8 var(--mono)}
-.touch-neck .string-name{color:#e8d6b9}
-#labBody button.touch-fret[aria-pressed]{position:relative;display:grid;place-items:center;min-height:44px;min-width:0;margin:0;padding:0;border:none;border-right:2px solid #a99a82;border-radius:0;background:linear-gradient(transparent 48%,#bfae92 50%,transparent 52%);color:#fff4df;font:600 .82rem var(--mono)}
-#labBody .touch-fret[data-fret="0"]{background-color:#29231e;border-right:3px solid #e9d8bb}
-#labBody .touch-fret span{border-radius:14px;min-width:23px;padding:2px 3px;background:#382d23}
-#labBody .touch-fret[data-mark=available] span{outline:1px solid #ddc38d;color:#ffdda3}
-#labBody .touch-fret[data-mark=selected] span{background:#b7efc0;color:#10281b;outline:2px solid #e3fbe8}
-#labBody .touch-fret:disabled{opacity:.48}
-.touch-fret:focus-visible{z-index:1}
-.neck-windows{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;margin-top:5px}
-#labBody .neck-windows button{margin:0;padding:2px;font:600 .78rem var(--mono)}
 .note-occurrences:not(:empty){border:1px solid var(--line);padding:8px;background:var(--soft);border-radius:8px}
 .note-occurrences button,.position-results button{margin:2px}
 .position-results h3{margin-block:8px}
@@ -263,3 +240,25 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 .song-row+.song-row{border-top:1px solid var(--line)}
 .song-actions{display:flex;gap:8px;padding-bottom:10px}
 #restoreSong{margin-block:6px}
+
+/* The bitmap, number strip and six rows of targets move as one piece. */
+.guitar-neck{max-width:100%;min-width:0;margin-block:10px 6px}
+.neck-frame{display:flex;align-items:flex-start;overflow:hidden;border-radius:10px;border:1px solid #544a3f;background:#211d19}
+.neck-scroll{min-width:0;flex:1;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-color:#aa9479 #302821;user-select:none;-webkit-user-select:none}
+.neck-track{display:grid;width:max-content;grid-template-rows:28px repeat(6,44px);background:#38271e url('rosewood-neck.webp') left bottom / 100% 264px no-repeat}
+.tuning-rail{flex:none;width:26px;display:grid;grid-template-rows:28px repeat(6,44px);text-align:center;background:#2c2823;color:#eee5d4;box-shadow:inset -1px 0 #736453}
+.neck-number,.tuning-rail>*{display:grid;place-items:center;font:650 .79rem var(--mono)}
+.neck-number,.tuning-rail>span{background:#24211d;color:#e2d5bc}
+.tuning-rail>span{font-size:.72rem;color:#bdad96}
+.neck-track .neck-cell,#labBody .neck-track .neck-cell{display:grid;place-items:center;width:100%;min-width:44px;height:44px;min-height:44px;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#fff4dc;font:600 .80rem/1 var(--mono)}
+.neck-cell .note-cap{display:inline-flex;align-items:center;justify-content:center;min-width:20px;padding:3px;border-radius:8px;background:#211711b3;text-shadow:0 1px 2px #22150e;pointer-events:none}
+.neck-track .blank .note-cap,.neck-track .neck-cell:disabled .note-cap{visibility:hidden}
+.neck-track .neck-cell:disabled{opacity:1}
+.neck-track .neck-cell:is([data-mark=available],[data-answer=retry]) .note-cap{background:#493720;color:#ffe4ad;outline:1.5px solid #e9c58b}
+.neck-track .neck-cell:is(.selected,[data-mark=selected],[data-answer=correct]) .note-cap{min-width:29px;min-height:29px;border-radius:50%;color:#132519;background:var(--finger,#b7efc0);border:2px solid #f9f2d8;text-shadow:none;box-shadow:0 2px 4px #190e0ac7}
+.neck-track .neck-cell[data-answer=retry] .note-cap{outline:2px dashed #ffab82}
+.neck-track .neck-cell sup{align-self:flex-start;font-size:.7em}
+.neck-track .neck-cell:focus-visible{outline:2px solid #ffe9b2;outline-offset:-3px}
+.neck-navigation{display:flex;align-items:center;gap:12px;color:var(--muted);font:600 .78rem var(--mono)}
+.neck-navigation span{min-width:11ch;white-space:nowrap}
+.neck-navigation input[type=range],#labBody .neck-navigation input[type=range]{border:0;width:0;flex:1;min-width:0;height:44px;padding:0;margin:0;background:transparent;accent-color:var(--accent);cursor:pointer}

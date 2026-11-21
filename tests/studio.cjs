@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
@@ -190,7 +190,19 @@ console.log('PASS phrase training, repair, tempo change, cue-free recall, delaye
 
 await nav('Tools');await moreTools();await page.click('#newRiff');
 await page.fill('#riffName','B-string 10–9');
-await page.selectOption('#riffWindow','6');
+
+const boardScroll=page.locator('#entryNeck .neck-scroll');
+assert.equal(await boardScroll.locator('button').count(),150);
+assert.equal(await page.evaluate(async()=>{const img=new Image();img.src='rosewood-neck.webp';await img.decode();return img.naturalWidth}),2914);
+await boardScroll.scrollIntoViewIfNeeded();
+const dragBox=await boardScroll.boundingBox();
+await page.mouse.move(dragBox.x+170,dragBox.y+56);await page.mouse.down();
+await page.mouse.move(dragBox.x+67,dragBox.y+56,{steps:10});await page.mouse.up();
+assert.ok(await boardScroll.evaluate(el=>el.scrollLeft>70));
+assert.equal(await page.locator('#draftNotes button').count(),0,'dragging must not add a note');
+const last=boardScroll.locator('button[data-string="2"][data-fret="24"]');
+await last.focus();await page.keyboard.press('ArrowLeft');
+assert.equal(await page.evaluate(()=>document.activeElement.dataset.fret),'23');
 const fretButton=n=>page.getByRole('button',{name:'Add B string fret '+n,exact:true});
 for(const fret of [10,9,10])await fretButton(fret).click();
 await page.selectOption('#riffLength','2');await fretButton(9).click(); // beats 4 to 1 of bar two
@@ -202,7 +214,7 @@ assert.equal(await page.locator('#draftNotes button').count(),5);
 assert.equal(await page.locator('#riffRibbon .riff-measure').count(),2);
 assert.equal(await page.locator('#riffRibbon .rest').count(),1);
 await page.locator('#draftNotes button').first().click();await page.click('#replaceNote');
-await page.selectOption('#riffWindow','6');await fretButton(10).click();
+await fretButton(10).click();
 await page.click('#saveRiff');
 const riffId=await page.locator('#lesson').inputValue();
 assert.ok(riffId.startsWith('riff-'));

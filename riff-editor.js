@@ -68,33 +68,19 @@
     if(string)audition(note(string,fret,e.finger));
     persistDraft();redraw();
   }
-  function drawEntryNeck() {
-    const board=$('entryNeck');
-    const start=Number($('riffWindow').value);
-    const frets=[0,...Array.from({length:Math.min(5,25-start)},(_,i)=>start+i)];
-    board.style.setProperty('--cols',frets.length);
-    board.replaceChildren(element('span'));
-    for(const fret of frets)board.append(element('b',fret));
-    for(let string=1;string<=6;string++) {
-      board.append(element('b',stringSymbols[string-1]));
-      for(const fret of frets){
-        const button=element('button',pitchAt(string,fret).name);
-        button.setAttribute('aria-label','Add '+stringNames[string-1]+' string fret '+fret);
-        button.onclick=()=>add(string,fret);board.append(button);
-      }
-    }
-  }
+  const entryBoard=guitarNeck('Riff fretboard',({string,fret})=>add(string,fret),
+    ({string,fret})=>'Add '+stringNames[string-1]+' string fret '+fret);
+  $('entryNeck').append(entryBoard.root);
   function openEditor(source) {
     haltPlayback();stopMetro();pauseTimer();
     const data=source || store.riffDraft;
     draft=Array.isArray(data?.events) ? data.events.filter(validRiffEvent).slice(0,128) : [];
     $('riffName').value=source ? source.name.slice(0,54)+' variation' : data?.name || '';
     selected=-1;replacing=false;undo=[];
-    drawEntryNeck();redraw();dialog.showModal();
+    redraw();dialog.showModal();entryBoard.reveal(draft.findLast(e=>e.string)?.fret ?? 0);
   }
   $('newRiff').onclick=()=>openEditor();
   $('copyRiff').onclick=()=>openEditor(store.riffs.find(r=>r.id===active.id));
-  $('riffWindow').onchange=drawEntryNeck;
   $('riffName').oninput=persistDraft;
   $('addRest').onclick=()=>add(0,0);
   $('replaceNote').onclick=()=>{replacing=true;redraw()};
