@@ -18,7 +18,11 @@ page.on('pageerror',e=>errors.push(String(e)));
 await page.addInitScript(()=>{if(!localStorage.getItem('fretboard-v2'))localStorage.setItem('fretboard-v2',JSON.stringify({notes:'Old notes',days:{'2026-11-20':true},times:{ear:125},done:{ear:true}}))});
 await page.goto('http://127.0.0.1:'+server.address().port);
 assert.equal(await page.locator('#notes').inputValue(),'Old notes');
-const nav=async name=>page.locator('.brandbar nav').getByRole('link',{name,exact:true}).click();
+const nav=async name=>{
+  await page.locator('.brandbar nav').getByRole('link',{name,exact:true}).click();
+  const panels={Practice:'#practicePage',Songs:'#songsPage',Tools:'#toolsPage',Journal:'#journal'};
+  await page.locator(panels[name]).waitFor();
+};
 const choose=async id=>{
   await nav('Practice');
   await page.locator('.exercise-row[data-lesson="'+id+'"]').click();
