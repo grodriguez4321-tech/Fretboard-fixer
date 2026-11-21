@@ -26,7 +26,7 @@ module.exports=async function(page,assert,choose,nav){
   const cell=(string,fret)=>box.locator('.touch-fret[data-string="'+string+'"][data-fret="'+fret+'"]');
   await cell(6,0).click();assert.equal(await box.locator('h3').innerText(),'E2');
   await box.getByRole('slider').focus();await page.keyboard.press('End');
-  assert.ok(await box.locator('.neck-scroll').evaluate(el=>el.scrollLeft>1000));await cell(1,24).click();
+  assert.ok(await box.locator('.neck-scroll').evaluate(el=>el.scrollLeft>0 && el.scrollLeft+el.clientWidth>=el.scrollWidth-1));await cell(1,24).click();
   assert.equal(await box.locator('h3').innerText(),'E6');
   await cell(2,10).click();
   assert.ok(await button('high E string · fret 5').isVisible());

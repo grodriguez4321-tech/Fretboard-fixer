@@ -200,6 +200,17 @@ await page.mouse.move(dragBox.x+170,dragBox.y+56);await page.mouse.down();
 await page.mouse.move(dragBox.x+67,dragBox.y+56,{steps:10});await page.mouse.up();
 assert.ok(await boardScroll.evaluate(el=>el.scrollLeft>70));
 assert.equal(await page.locator('#draftNotes button').count(),0,'dragging must not add a note');
+if(process.argv[2]==='chromium'){
+  const cdp=await page.context().newCDPSession(page);
+  const x=dragBox.x+185,y=dragBox.y+84;
+  const before=await boardScroll.evaluate(el=>el.scrollLeft);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+  for(let i=1;i<=8;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-14*i,y}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await page.waitForFunction(start=>document.querySelector('#entryNeck .neck-scroll').scrollLeft>start+20,before);
+  assert.equal(await page.locator('#draftNotes button').count(),0,'swiping must not write a note');
+  await cdp.detach();
+}
 const last=boardScroll.locator('button[data-string="2"][data-fret="24"]');
 await last.focus();await page.keyboard.press('ArrowLeft');
 assert.equal(await page.evaluate(()=>document.activeElement.dataset.fret),'23');
