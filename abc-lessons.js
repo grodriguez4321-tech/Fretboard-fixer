@@ -1,4 +1,4 @@
-// Local ABC excerpts. Durations are stored in quarter-note beats, just like
+// Local ABC song lessons. Durations are stored in quarter-note beats, just like
 // the studio scores. Reject notation outside the supported subset explicitly.
 const songLessons=new Map();
 
@@ -45,6 +45,8 @@ function compileAbc(text){
   const bStringHint=comments.some(c=>/B string 10 to 8/i.test(c));
   const pullOffHint=comments.join(' ').match(/pull-off\s*\((\d+) to (\d+)\)/i);
   let anchor=bStringHint?8:2;
+  let section='',events=0,hasNavigation=false;
+  const tempoChanges=[];
   const pitchSyntax=/^([_=^]?)([A-Ga-g])([,']*)/;
   function readPitch(token){
     const [,mark,letter,octaves]=token.match(pitchSyntax),key=letter+octaves;
@@ -56,23 +58,48 @@ function compileAbc(text){
   }
   function finishBar(){
     if(!bar.length)return;
-    if(bars.length>=64)throw Error('Use excerpts of 64 bars or fewer.');
-    bars.push(bar);labels.push('Phrase '+bars.length);bar=[];accidental=new Map();
+    if(bars.length>=256)throw Error('Choose a song with 256 bars or fewer.');
+    bars.push(bar);labels.push(section||'Phrase '+bars.length);bar=[];accidental=new Map();
   }
   let data=music.join(' ');
   while(data.length){
     data=data.trimStart();if(!data)break;
     let m;
-    if((m=/^(\|\]|\|\||\|)/.exec(data))){finishBar();data=data.slice(m[0].length);continue}
+    if((m=/^\[P:([^\]]+)\]/.exec(data))){
+      if(bar.length)finishBar();
+      section=m[1].trim();data=data.slice(m[0].length);continue;
+    }
+    if((m=/^\[Q:1\/4\s*=\s*(\d+)\]/.exec(data))){
+      const tempo=Number(m[1]);
+      if(tempo<20||tempo>300)throw Error('Unsupported tempo.');
+      tempoChanges.push('Bar '+(bars.length+1)+': '+tempo+' BPM');
+      data=data.slice(m[0].length);continue;
+    }
+    if((m=/^(?:\[\d+(?:,\d+)*|!(?:segno|coda)!|"\^[^"]*")/.exec(data))){
+      hasNavigation=true;data=data.slice(m[0].length);continue;
+    }
+    if((m=/^(\|:|:\||\|\]|\|\||\|)/.exec(data))){
+      if(m[0].includes(':'))hasNavigation=true;
+      finishBar();data=data.slice(m[0].length);continue;
+    }
+    if((m=/^Z(\d*)/.exec(data))){
+      const count=Number(m[1]||1);
+      if(!meter||count<1||count>256||bar.length||tie||tupleCount)throw Error('Unsupported whole-bar rest.');
+      for(let i=0;i<count;i++){
+        last={positions:[],beats:meter,action:'Rest',from:null,names:[],midis:[],sourceIndex:ordinal++,continuation:false};
+        bar.push(last);finishBar();events++;
+      }
+      data=data.slice(m[0].length);continue;
+    }
     if((m=/^\(3(?::2:([123]))?/.exec(data))){factor=2/3;tupleCount=Number(m[1]||3);data=data.slice(m[0].length);continue}
     if(data[0]==='('){slur=true;slurStart=true;data=data.slice(1);continue}
     if(data[0]===')'){slur=false;data=data.slice(1);continue}
     if(data[0]==='-'){if(!last?.positions.length)throw Error('Tie needs a preceding note.');tie=last;data=data.slice(1);continue}
-    m=/^(\[(?:[_=^]?[a-gA-G][,']*){1,6}\]|[_=^]?[a-gA-G][,']*|z|Z)(\d*)(?:\/(\d*))?/.exec(data);
+    m=/^(\[(?:[_=^]?[a-gA-G][,']*){1,6}\]|[_=^]?[a-gA-G][,']*|z)(\d*)(?:\/(\d*))?/.exec(data);
     if(!m)throw Error('Unsupported ABC near “'+data.slice(0,10)+'”.');
-    let beats=m[1]==='Z'?meter:defaultBeat*(Number(m[2])||1)/(m[3]===undefined?1:Number(m[3])||2);
+    let beats=defaultBeat*(Number(m[2])||1)/(m[3]===undefined?1:Number(m[3])||2);
     if(tupleCount){beats*=factor;tupleCount--}
-    if(!(beats>0 && beats<=32) || ordinal>=512)throw Error('Unsupported excerpt length.');
+    if(!(beats>0 && beats<=32) || ++events>4096)throw Error('Unsupported excerpt length.');
     const notes=(m[1].match(/[_=^]?[a-gA-G][,']*/g)||[]).map(readPitch);
     let positions=guitarVoicing(notes.map(n=>n.midi),anchor);
     if(bStringHint && notes.length===1){
@@ -102,6 +129,8 @@ function compileAbc(text){
   }
   finishBar();
   if(!bars.length || tupleCount)throw Error('Incomplete excerpt.');
+  if(hasNavigation)comments.push('Playback follows written bar order. Repeats and coda jumps are manual.');
+  if(tempoChanges.length)comments.push('Source tempo changes: '+tempoChanges.join(', ')+'. Set practice tempo manually.');
   const title=titles[0],descriptor=titles.slice(1).join(' · ');
   const sourceBpm=Number(bpm[1]),startBpm=Math.min(80,Math.max(40,5*Math.round(sourceBpm*.65/5)));
   const intro=bars.flat().find(e=>e.positions.length);
