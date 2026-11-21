@@ -29,6 +29,8 @@ function makeSequence(bars, selection) {
       return item;
     });
   });
+  const join=joinNotes(selection);
+  if(join)return join.flatMap(index=>events.filter(e=>e.sourceIndex===index));
   const bounds=noteRange(selection);
   if(bounds)return events.filter(e=>e.sourceIndex>=bounds[0] && e.sourceIndex<=bounds[1]);
   return events.filter(event=>selection==='all' || event.bar===Number(selection));
@@ -207,7 +209,7 @@ async function play() {
   // One clock schedules every eighth note, including beats inside held chords.
   const clock=()=>audible ? audio.currentTime : performance.now()/1000;
   let due=clock()+.04, elapsed=0, freshAttack=true;
-  const ranged=!!noteRange($('phrase').value);
+  const ranged=!!(noteRange($('phrase').value) || joinNotes($('phrase').value));
   function waitBeats(count,label,withClick) {
     if(token!==generation)return;
     if(!count){pulse();return}

@@ -8,7 +8,11 @@
   </aside>
   <div class="lesson-head"><div><div class="category" id="category"></div><h1 id="lessonTitle"></h1><p id="objective"></p></div>
   <label class="choose">Exercise<select id="lesson"></select></label></div>
-  <div class="riff-launch"><button id="newRiff">Build a riff</button><button hidden id="copyRiff">Edit a copy</button></div>
+  <div class="riff-launch"><button id="newRiff">Build a riff</button><button id="openTools">Learning tools</button><button id="quickStart">5-minute session</button><button hidden id="copyRiff">Edit a copy</button></div>
+  <section id="quickPanel" class="quick-panel" hidden aria-label="Five-minute practice session">
+    <div class="score-head"><h2 id="quickTitle"></h2><strong id="quickTime"></strong></div>
+    <p id="quickPrompt"></p><div class="log-buttons"><button id="quickPause">Pause session</button><button id="quickNext">Next activity</button><button id="quickReview" hidden>Try from memory</button></div>
+  </section>
   <div class="surface">
     <div id="levelRow"><label for="level">Exercise level</label> <select id="level"></select></div><div class="score-head"><h2>Interactive tab</h2><label class="measure">Phrase <select id="phrase" aria-label="Practice phrase"></select></label></div>
     <div class="readouts"><div><span class="caption">Play now</span><strong id="now"></strong><small id="placement"></small></div><div><span class="caption">Up next</span><strong id="upcoming"></strong><small id="nextPosition"></small></div></div>
@@ -45,6 +49,10 @@
 <section class="card"><div class="row between"><h2>Standalone metronome</h2><span id="beatCount" class="pill">4 beats / bar</span></div><div class="row"><span class="bpm" id="bpmDisplay">60</span><span class="muted">BPM</span></div><input id="bpm" aria-label="Tempo" type="range" min="40" max="180" step="5" value="60"><div class="row between"><div class="row"><label for="beats">Beats</label><select id="beats"><option>2</option><option>3</option><option selected>4</option><option>6</option></select></div><button class="primary" id="metroBtn">Start click</button><div id="dots" class="dots"></div></div><p class="muted" style="font-size:.85rem">Tap Start to enable audio. Beat one is accented. Adjust tempo while playing.</p></section>
 <section class="card" id="routine"><div class="row between"><div><h2>Today's guided routine</h2><div class="muted">25 minutes · 5 focused sections</div></div><button id="resetRoutine">Reset routine</button></div><div class="grid" style="margin:16px 0"><div class="mini"><div id="doneCount" class="stat">0/11</div><div class="muted">exercises done</div></div><div class="mini"><div id="practiceTime" class="stat">0m</div><div class="muted">practice logged</div></div><div class="mini"><div id="streak" class="stat">0</div><div class="muted">practice days</div></div></div><div id="sections"></div></section>
 <section class="card" id="journal"><h2>Practice notes</h2><p class="muted">What got cleaner? Where did your fingers hesitate?</p><textarea id="notes" placeholder="Today I played the 5–8 pattern cleanly at 65 BPM..."></textarea><div class="row between" style="margin-top:12px"><span id="saved" class="muted">Saved on this device</span><button id="export">Export progress (.json)</button></div></section><footer>Practice pain-free: don't force large stretches. Move the whole hand, reduce the span, or shift positions. Your data stays in this browser unless exported.</footer></main>
+<dialog id="labDialog" aria-labelledby="labTitle">
+  <div class="score-head"><h2 id="labTitle">Learning tools</h2><button id="labClose">Close</button></div>
+  <div id="labBody"></div><button id="labBack" hidden>All tools</button>
+</dialog>
 <dialog id="riffDialog" aria-labelledby="riffTitle">
   <h2 id="riffTitle">Riff builder</h2>
   <label>Riff name <input id="riffName" maxlength="64" placeholder="My B-string riff" autocomplete="off"></label>
@@ -72,4 +80,8 @@
 <script src="studio.js"></script>
 <script src="riff-editor.js"></script>
 <script src="coach.js"></script>
+<script src="learning-tools.js"></script>
+<script src="pitch-tools.js"></script>
+<script src="music-drills.js"></script>
+<script src="practice-plans.js"></script>
 </body></html>

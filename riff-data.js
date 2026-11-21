@@ -51,13 +51,19 @@ function noteRange(value) {
   const m=/^notes-(\d+)-(\d+)$/.exec(value);
   return m ? [Number(m[1]),Number(m[2])] : null;
 }
+function joinNotes(value) {
+  const m=/^join-(\d+)-(\d+)$/.exec(value);
+  return m ? [Number(m[1]),Number(m[2])] : null;
+}
 function phraseName(value) {
+  const join=joinNotes(value);
+  if(join)return 'join notes '+(join[0]+1)+' and '+(join[1]+1);
   const bounds=noteRange(value);
   if(bounds) return 'notes '+(bounds[0]+1)+'–'+(bounds[1]+1);
   return value==='all' ? 'full phrase' : 'bar '+(Number(value)+1);
 }
 function selectPhrase(value) {
-  if(noteRange(value)) {
+  if(noteRange(value) || joinNotes(value)) {
     let option=$('phrase').querySelector('[data-range]');
     if(!option){option=new Option();option.dataset.range='true';$('phrase').add(option)}
     option.value=value;option.textContent=phraseName(value);
