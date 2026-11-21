@@ -45,3 +45,9 @@ button{touch-action:manipulation}button:hover,select:hover{border-color:var(--mi
 #recallDialog h2{font-size:1.55rem;margin:.35rem 0}
 #recallDialog p{line-height:1.5}#recallDialog .category{font-size:.8rem}#recallFeedback{color:var(--mint)}
 #closeRecall{margin-top:15px}#repStatus{color:var(--txt)}.phrase-coach [hidden]{display:none}
+
+.riff-launch{display:flex;gap:8px;margin:0 0 12px}.range-tool{border-top:1px solid var(--line);padding:12px 0}.range-tool summary{cursor:pointer;font-weight:650}.riff-settings{display:flex;gap:8px 16px;flex-wrap:wrap;margin:12px 0}.riff-settings label,#riffDialog>label{display:grid;gap:3px;min-width:0;color:var(--muted);font-size:.9rem}.riff-settings select{min-width:0;max-width:100%}
+#riffDialog{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:14px;width:min(94vw,640px);padding:clamp(12px,3vw,24px);max-height:92dvh;overflow:auto}#riffDialog::backdrop{background:#0a1410ed}
+#riffName{min-width:0;width:100%;border:1px solid var(--line);background:var(--panel);color:var(--txt);border-radius:7px;padding:10px;font:inherit;font-size:1rem}
+#entryNeck{display:grid;grid-template-columns:1.15em repeat(var(--cols),minmax(0,1fr));align-items:center;margin:10px 0;gap:2px;text-align:center}#entryNeck b{font-size:.83rem}#entryNeck button{padding:2px;border-radius:5px;font:.87rem ui-monospace,monospace;min-height:42px}
+#draftNotes{display:flex;flex-wrap:wrap;gap:5px;max-height:145px;overflow:auto}#draftNotes button{padding:5px 8px;font-size:.84rem}#riffDialog h3{margin:15px 0 6px}#noteEdit{margin-top:6px}#draftStatus{font-size:.9rem;color:var(--muted)}.riff-launch [hidden]{display:none}

@@ -22,10 +22,10 @@
   }
 
   const keyOf = t => [t.lesson,t.level,t.phrase].join('/');
-  const lessonOf = t => all.find(ex => ex.id === t.lesson);
+  const lessonOf = t => lessonById(t.lesson);
   function targetName(t) {
     const level = t.lesson === 'chromatic' ? ' · '+chromaticLevels[t.level].name : '';
-    return lessonOf(t).name + level + ' · ' + (t.phrase === 'all' ? 'both bars' : 'bar '+(Number(t.phrase)+1));
+    return lessonOf(t).name + level + ' · ' + (t.phrase==='all' && ['emam','amc'].includes(t.lesson) ? 'both bars' : phraseName(t.phrase));
   }
   function chooseTarget() {
     const phrase = $('phrase').value;
@@ -96,7 +96,7 @@
       if (t.lesson==='chromatic') {store.chromaticLevel=t.level;save()}
       openLesson(lessonOf(t));setBpm(t.bpm);
     }
-    $('phrase').value=t.phrase;
+    selectPhrase(t.phrase);
     rebuildPhrase();
     study={...t};cleanPasses=0;
     $('coachStart').hidden=true;$('repControls').hidden=false;
@@ -129,7 +129,7 @@
     screen(t,clean?'Clean recall logged':'Cue needed',
       (clean?'Try the same phrase again':'Revisit the tricky change, then try again')+' in '+(days===1?'24 hours.':days+' days.'));
     if (!clean) {
-      $('recallFeedback').textContent=repair[t.lesson];
+      $('recallFeedback').textContent=(repair[t.lesson] || repair.song);
       action('Practice this phrase',()=>{
         dialog.close(); beginStudy(t,true); $('repClean').focus();
       },true);
@@ -148,7 +148,7 @@
   $('repMiss').onclick=()=>{
     if (!study) return;
     cleanPasses=0;
-    $('repStatus').textContent=repair[study.lesson]+' Lower the tempo if needed, then try two clean passes.';
+    $('repStatus').textContent=(repair[study.lesson] || repair.song)+' Lower the tempo if needed, then try two clean passes.';
   };
   $('startReview').onclick=()=>{
     refreshQueue();

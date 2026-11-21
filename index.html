@@ -8,6 +8,7 @@
   </aside>
   <div class="lesson-head"><div><div class="category" id="category"></div><h1 id="lessonTitle"></h1><p id="objective"></p></div>
   <label class="choose">Exercise<select id="lesson"></select></label></div>
+  <div class="riff-launch"><button id="newRiff">Build a riff</button><button hidden id="copyRiff">Edit a copy</button></div>
   <div class="surface">
     <div id="levelRow"><label for="level">Exercise level</label> <select id="level"></select></div><div class="score-head"><h2>Interactive tab</h2><label class="measure">Phrase <select id="phrase" aria-label="Practice phrase"></select></label></div>
     <div class="readouts"><div><span class="caption">Play now</span><strong id="now"></strong><small id="placement"></small></div><div><span class="caption">Up next</span><strong id="upcoming"></strong><small id="nextPosition"></small></div></div>
@@ -15,6 +16,14 @@
     <div class="staff-scroll"><div id="staff"></div></div>
     <div class="transport"><button class="primary" id="play">▶ Play</button><button id="restart">Restart</button><button id="step">Step</button><button id="loop" aria-pressed="false">Loop</button></div>
     <div class="sound-row"><div class="tempo-step"><button id="slower" aria-label="Decrease tempo">−</button><b id="speed"></b><button id="faster" aria-label="Increase tempo">+</button></div><label><input type="checkbox" id="clickTrack" checked> Click</label><label><input type="checkbox" id="guideTone" checked> Notes</label></div>
+        <details class="range-tool" id="rangeTool"><summary>Tricky-change looper</summary>
+      <p class="hint">Choose the first and last notes to repeat. A loop can cross a bar line.</p>
+      <div class="riff-settings"><label>First note <select id="rangeFirst"></select></label><label>Last note <select id="rangeLast"></select></label></div>
+      <div class="riff-settings"><label>Count-in <select id="rangeLead"><option value="0">Off</option><option value="2" selected>2 beats</option><option value="4">4 beats</option></select></label>
+      <label>Rest between loops <select id="rangeGap"><option value="0">Off</option><option value="1">1 beat</option><option value="2">2 beats</option></select></label></div>
+      <div class="log-buttons"><button id="applyRange">Set note loop</button><button id="growRange">Expand by one each side</button></div>
+      <p class="hint" role="status" id="rangeStatus"></p>
+    </details>
     <section class="phrase-coach" aria-labelledby="coachTitle">
       <div class="coach-top"><div><h3 id="coachTitle">Phrase practice</h3>
         <p id="coachHint">Learn a phrase with the tab, then try it from memory.</p></div>
@@ -36,6 +45,22 @@
 <section class="card"><div class="row between"><h2>Standalone metronome</h2><span id="beatCount" class="pill">4 beats / bar</span></div><div class="row"><span class="bpm" id="bpmDisplay">60</span><span class="muted">BPM</span></div><input id="bpm" aria-label="Tempo" type="range" min="40" max="180" step="5" value="60"><div class="row between"><div class="row"><label for="beats">Beats</label><select id="beats"><option>2</option><option>3</option><option selected>4</option><option>6</option></select></div><button class="primary" id="metroBtn">Start click</button><div id="dots" class="dots"></div></div><p class="muted" style="font-size:.85rem">Tap Start to enable audio. Beat one is accented. Adjust tempo while playing.</p></section>
 <section class="card" id="routine"><div class="row between"><div><h2>Today's guided routine</h2><div class="muted">25 minutes · 5 focused sections</div></div><button id="resetRoutine">Reset routine</button></div><div class="grid" style="margin:16px 0"><div class="mini"><div id="doneCount" class="stat">0/11</div><div class="muted">exercises done</div></div><div class="mini"><div id="practiceTime" class="stat">0m</div><div class="muted">practice logged</div></div><div class="mini"><div id="streak" class="stat">0</div><div class="muted">practice days</div></div></div><div id="sections"></div></section>
 <section class="card" id="journal"><h2>Practice notes</h2><p class="muted">What got cleaner? Where did your fingers hesitate?</p><textarea id="notes" placeholder="Today I played the 5–8 pattern cleanly at 65 BPM..."></textarea><div class="row between" style="margin-top:12px"><span id="saved" class="muted">Saved on this device</span><button id="export">Export progress (.json)</button></div></section><footer>Practice pain-free: don't force large stretches. Move the whole hand, reduce the span, or shift positions. Your data stays in this browser unless exported.</footer></main>
+<dialog id="riffDialog" aria-labelledby="riffTitle">
+  <h2 id="riffTitle">Riff builder</h2>
+  <label>Riff name <input id="riffName" maxlength="64" placeholder="My B-string riff" autocomplete="off"></label>
+  <div class="riff-settings">
+    <label>Note length <select id="riffLength"><option value="0.5">½ beat</option><option value="1" selected>1 beat</option><option value="2">2 beats</option><option value="4">4 beats</option></select></label>
+    <label>Fretting finger <select id="riffFinger"><option value="">My choice</option><option value="1">Index</option><option value="2">Middle</option><option value="3">Ring</option><option value="4">Pinky</option></select></label>
+    <label>Fret window <select id="riffWindow"><option value="1">1–5</option><option value="6">6–10</option><option value="11">11–15</option><option value="16">16–20</option><option value="21">21–24</option></select></label>
+  </div>
+  <p class="hint">Tap a fret to add a note. The high E string is on top. Column 0 is the open string.</p>
+  <div id="entryNeck"></div>
+  <div class="log-buttons"><button id="addRest">Add rest</button><button id="undoNote">Undo</button></div>
+  <h3>Your sequence</h3><div id="draftNotes" aria-label="Notes in playing order"></div>
+  <div id="noteEdit" hidden><button id="replaceNote">Replace selected</button><button id="deleteNote">Remove selected</button></div>
+  <p id="draftStatus" role="status"></p>
+  <div class="log-buttons"><button class="primary" id="saveRiff">Save and practice</button><button id="closeRiff">Close builder</button></div>
+</dialog>
 <dialog id="recallDialog" aria-labelledby="recallTitle" aria-describedby="recallPrompt">
   <p id="recallTarget" class="category"></p><h2 id="recallTitle"></h2><p id="recallPrompt"></p>
   <p id="recallFeedback" role="status"></p>
@@ -43,6 +68,8 @@
 </dialog>
 <script src="scores.js"></script>
 <script src="routine.js"></script>
+<script src="riff-data.js"></script>
 <script src="studio.js"></script>
+<script src="riff-editor.js"></script>
 <script src="coach.js"></script>
 </body></html>

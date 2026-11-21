@@ -19,14 +19,19 @@ function element(tag, text, cls) {
   return node;
 }
 function makeSequence(bars, selection) {
-  return bars.flatMap((bar, b) => {
+  let ordinal=0;
+  const events=bars.flatMap((bar, b) => {
     let beat = 0;
     return bar.map(event => {
-      const item = {...event, bar:b, beat};
+      const item = {...event, bar:b, beat, sourceIndex:event.sourceIndex ?? ordinal};
+      ordinal++;
       beat += event.beats;
       return item;
     });
-  }).filter(event => selection === 'all' || event.bar === Number(selection));
+  });
+  const bounds=noteRange(selection);
+  if(bounds)return events.filter(e=>e.sourceIndex>=bounds[0] && e.sourceIndex<=bounds[1]);
+  return events.filter(event=>selection==='all' || event.bar===Number(selection));
 }
 function nextIndex() {
   return cursor + 1 < sequence.length ? cursor + 1 : looping ? 0 : -1;
@@ -40,14 +45,14 @@ function describe(event) {
   if (!event.positions.length) return [event.action, event.action === 'Rest' ? 'Silence' : 'Lightly mute all six strings'];
   const {string, fret, finger} = event.positions[0];
   const {name, octave} = pitchAt(string, fret);
-  return [name + octave + ' · ' + event.action, stringNames[string-1] + ' string · fret ' + fret + ' · ' + fingerNames[finger]];
+  return [name + octave + ' · ' + event.action, stringNames[string-1] + ' string · fret ' + fret + ' · ' + (finger==null ? 'your fingering' : fingerNames[finger])];
 }
 function token(event, string) {
   if (event.action.startsWith('Muted')) return '×';
   const position = event.positions.find(p => p.string === string);
   if (!position) return event.chord && string === 6 ? '×' : '';
   const marker = {'Hammer-on':'h','Pull-off':'p','Slide':event.from < position.fret ? '/' : '∖'}[event.action] || '';
-  return marker + position.fret + (event.action === 'Half-step bend' ? 'b½' : '');
+  return (event.continuation ? '~' : '') + marker + position.fret + (event.action === 'Half-step bend' ? 'b½' : '');
 }
 function buildStaff(bar) {
   const staff = $('staff');
@@ -77,8 +82,10 @@ function drawNeck(event) {
   const fretted = score().bars[event.bar].flatMap(item=>item.positions.map(p=>p.fret)).filter(f=>f>0);
   const high = Math.max(0,...fretted);
   const low = fretted.length ? Math.min(...fretted) : 1;
-  const start = Math.max(1, Math.min(low,high-4));
-  const width = Math.max(5,high-start+1);
+  const wide=high-low>5;
+  const current=event.positions[0]?.fret || low;
+  const start = wide ? Math.max(1,Math.min(20,current-2)) : Math.max(1, Math.min(low,high-4));
+  const width = wide ? 5 : Math.max(5,high-start+1);
   const frets = [0,...Array.from({length:width},(_,i)=>start+i)];
   const neck = $('neck'), key = frets.join(',');
   if (key !== neckKey) {
@@ -113,7 +120,7 @@ function drawNeck(event) {
     const label = pitchAt(s,f).name;
     const marker=cell.firstChild;
     marker.textContent=label;
-    if(pos) marker.append(element('sup',pos.finger || '°'));
+    if(pos) marker.append(element('sup',pos.fret===0 ? '°' : pos.finger || ''));
     cell.setAttribute('aria-pressed',String(!!pos));
   }
 }
@@ -199,12 +206,25 @@ async function play() {
   if(!audible)$('explore').textContent='Audio unavailable. Follow the highlighted notes visually.';
   // One clock schedules every eighth note, including beats inside held chords.
   const clock=()=>audible ? audio.currentTime : performance.now()/1000;
-  let due=clock()+.04, elapsed=0;
+  let due=clock()+.04, elapsed=0, freshAttack=true;
+  const ranged=!!noteRange($('phrase').value);
+  function waitBeats(count,label,withClick) {
+    if(token!==generation)return;
+    if(!count){pulse();return}
+    $('count').textContent=label+' · '+count;
+    if(withClick && audible && $('clickTrack').checked)voice(890,.045,due,.11,null,'sine');
+    due+=60/tempo();
+    timeout=setTimeout(()=>waitBeats(count-1,label,withClick),Math.max(0,(due-clock())*1000-10));
+  }
   function pulse() {
     if(token!==generation)return;
     const event=sequence[cursor], seconds=60/tempo();
     if(audible){
-      if(elapsed===0 && $('guideTone').checked)sound(event,due,seconds*event.beats);
+      if(elapsed===0 && $('guideTone').checked && (!event.continuation || freshAttack)){
+        let beats=event.beats;
+        for(let i=cursor+1;i<sequence.length && sequence[i].continuation && sequence[i].sourceIndex===event.sourceIndex;i++)beats+=sequence[i].beats;
+        sound(event,due,seconds*beats);
+      }
       if($('clickTrack').checked && Number.isInteger(event.beat+elapsed))
         voice(event.beat+elapsed===0?1250:890,.045,due,.11,null,'sine');
     }
@@ -220,20 +240,49 @@ async function play() {
         if(elapsed>=event.beats){
           const next=nextIndex();
           if(next<0){timeout=setTimeout(()=>{finished=true;haltPlayback();paint()},Math.max(0,(due-clock())*1000));return}
+          freshAttack=next===0;
           cursor=next;elapsed=0;
+          if(freshAttack && ranged && Number($('rangeGap').value)){
+            waitBeats(Number($('rangeGap').value),'Reset',false);return;
+          }
         }
         due=Math.max(due,clock()+.002);
         pulse();
       },Math.max(0,(due-clock()-.03)*1000));
     },Math.max(0,(due-clock())*1000));
   }
-  pulse();
+  waitBeats(ranged ? Number($('rangeLead').value) : 0,'Count in',true);
 }
 function rebuildPhrase() {
   haltPlayback();cursor=0;finished=false;barShown=-1;
-  sequence=makeSequence(score().bars,$('phrase').value);paint();showLog();
+  sequence=makeSequence(score().bars,$('phrase').value);refreshRange();paint();showLog();
   document.dispatchEvent(new Event('practicephrasechange'));
 }
+function refreshRange(){
+  const events=makeSequence(score().bars,'all');
+  const bounds=noteRange($('phrase').value);
+  const first=bounds?.[0] ?? sequence[0].sourceIndex;
+  const last=bounds?.[1] ?? Math.min(first+1,sequence.at(-1).sourceIndex);
+  for(const [id,value] of [['rangeFirst',first],['rangeLast',last]]){
+    const select=$(id);select.replaceChildren();
+    for(const e of events.filter(e=>!e.continuation)){
+      const pos=e.positions[0];
+      const label=e.chord || (pos ? stringNames[pos.string-1]+' '+pos.fret : e.action);
+      select.add(new Option((e.sourceIndex+1)+'. '+label+' · bar '+(e.bar+1)+' beat '+(e.beat+1),e.sourceIndex));
+    }
+    select.value=String(value);
+  }
+  $('rangeStatus').textContent=bounds ? 'Selected '+phraseName($('phrase').value)+'. Press Play to hear the loop.' : '';
+}
+function applyRange(expand){
+  let first=Number($('rangeFirst').value),last=Number($('rangeLast').value);
+  if(last<first){$('rangeStatus').textContent='Choose a last note at or after the first note.';return}
+  if(expand){first=Math.max(0,first-1);last=Math.min($('rangeLast').options.length-1,last+1)}
+  selectPhrase('notes-'+first+'-'+last);
+  looping=true;$('loop').setAttribute('aria-pressed','true');rebuildPhrase();
+}
+$('applyRange').onclick=()=>applyRange(false);
+$('growRange').onclick=()=>applyRange(true);
 function showLog() {
   $('complete').textContent=store.done[active.id]?'Mark incomplete':'Mark complete';
   const best=store.bests[bestKey()];
@@ -291,7 +340,8 @@ function openLesson(ex) {
   $('level').value=String(Math.max(0,Math.min(chromaticLevels.length-1,Number(store.chromaticLevel)||0)));
   $('lessonTitle').textContent=ex.name;
   const section=sections.find(s=>s.items.includes(ex));
-  $('category').textContent=section.title.split(' · ')[0]+' · '+Math.round(ex.duration/60)+' min';
+  $('category').textContent=(section ? section.title.split(' · ')[0] : 'My riffs')+' · '+Math.round(ex.duration/60)+' min';
+  $('copyRiff').hidden=!riffLessons.has(ex.id);
   $('objective').textContent=score().aim;
   $('phrase').replaceChildren(new Option('All measures','all'));
   score().labels.forEach((name,i)=>$('phrase').add(new Option('Bar '+(i+1)+' · '+name,i)));
@@ -316,7 +366,14 @@ fingerNames.forEach((name,i)=>{
   const label=element('span'), dot=element('b',i||'°','finger');
   dot.style.setProperty('--finger',colors[i]);label.append(dot,' '+name);$('legend').append(label);
 });
-$('lesson').onchange=()=>openLesson(all.find(ex=>ex.id===$('lesson').value));
+function refreshRiffPicker(){
+  let group=$('lesson').querySelector('[data-riffs]');
+  if(!group){group=element('optgroup');group.label='My riffs';group.dataset.riffs='true';$('lesson').append(group)}
+  group.replaceChildren();
+  for(const ex of riffLessons.values())group.append(new Option(ex.name,ex.id));
+}
+refreshRiffPicker();
+$('lesson').onchange=()=>openLesson(lessonById($('lesson').value));
 $('phrase').onchange=rebuildPhrase;
 $('play').onclick=play;
 $('step').onclick=()=>seek((cursor+1)%sequence.length,true);
