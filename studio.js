@@ -103,6 +103,7 @@ function drawNeck(event) {
         button.dataset.string = s;
         button.dataset.fret = f;
         button.setAttribute('aria-label',stringNames[s-1] + ' string, fret ' + f + ', ' + pitch.name + pitch.octave);
+        button.dataset.pitch=pitch.name;
         button.append(element('span',pitch.name));
         button.onclick = () => {
           haltPlayback();stopMetro();
@@ -116,14 +117,18 @@ function drawNeck(event) {
   for (const cell of neck.querySelectorAll('button')) {
     const s = Number(cell.dataset.string), f = Number(cell.dataset.fret);
     const pos = event.positions.find(p=>p.string === s && p.fret === f);
-    cell.classList.toggle('selected',!!pos);
     cell.classList.toggle('blank',!pos && !$('names').checked);
-    cell.style.setProperty('--finger',colors[pos?.finger || 0]);
-    const label = pitchAt(s,f).name;
-    const marker=cell.firstChild;
-    marker.textContent=label;
-    if(pos) marker.append(element('sup',pos.fret===0 ? '°' : pos.finger || ''));
+    const finger=pos ? String(pos.finger ?? 'unspecified') : '';
+    if(cell.dataset.finger===finger)continue;
+    cell.dataset.finger=finger;
+    cell.classList.toggle('selected',!!pos);
     cell.setAttribute('aria-pressed',String(!!pos));
+    const marker=cell.firstChild;
+    marker.textContent=cell.dataset.pitch;
+    if(pos){
+      cell.style.setProperty('--finger',colors[pos.finger || 0]);
+      if(pos.fret===0 || pos.finger)marker.append(element('sup',pos.fret===0 ? '°' : pos.finger));
+    }
   }
 }
 function paint() {
@@ -144,7 +149,8 @@ function paint() {
   [$('upcoming').textContent,$('nextPosition').textContent]=describe(sequence[next]);
   $('barName').textContent='Bar '+(event.bar+1)+' · '+score().labels[event.bar];
   $('count').textContent='Beat '+(event.beat+1)+' / 4';
-  $('play').textContent=playing?'Ⅱ Pause':finished?'▶︎ Replay':'▶︎ Play';
+  $('play').textContent=playing?'Pause':finished?'Replay':'Play';
+  $('play').dataset.playing=String(playing);
   drawNeck(event);
 }
 function silence() {
@@ -156,7 +162,7 @@ function haltPlayback() {
   playing=false;
   clearTimeout(timeout);
   silence();
-  if(sequence.length) $('play').textContent=finished?'▶︎ Replay':'▶︎ Play';
+  if(sequence.length){$('play').textContent=finished?'Replay':'Play';$('play').dataset.playing='false'}
 }
 async function enableAudio() {
   const Context=window.AudioContext || window.webkitAudioContext;
@@ -396,3 +402,17 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden){haltPlayback();stopMetro();if(timerRunning){tick();pauseTimer()}}
 });
 openLesson(active);
+
+const focusMode=$('focusMode');
+function setPracticeFocus(on) {
+  document.body.classList.toggle('practice-focus',on);
+  focusMode.setAttribute('aria-pressed',String(on));
+  focusMode.textContent=on ? 'Exit focus' : 'Focus mode';
+  focusMode.closest('.lesson-settings').scrollIntoView({block:'start'});
+}
+focusMode.onclick=()=>setPracticeFocus(!document.body.classList.contains('practice-focus'));
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape' && document.body.classList.contains('practice-focus') && !document.querySelector('dialog[open]')){
+    setPracticeFocus(false);focusMode.focus({preventScroll:true});
+  }
+});

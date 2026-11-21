@@ -4,10 +4,10 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
- res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':'text/html');fs.createReadStream(file).pipe(res);
+ res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
 });
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 let browser;
@@ -39,8 +39,8 @@ for(const width of [320,390,768,1440]){
     if(document.querySelectorAll('.fret.selected').length!==sequence[i].positions.length)problems.push('neck');
    }
    if(document.documentElement.scrollWidth>innerWidth+1){
-     const outside=[...document.querySelectorAll('body *')].filter(el=>el.getBoundingClientRect().right>innerWidth+1 && !el.closest('.staff-scroll,select'));
-     problems.push('overflow '+document.documentElement.scrollWidth+' from '+outside.slice(0,8).map(el=>el.id||el.className||el.tagName).join(', '));
+     const outside=[...document.querySelectorAll('body *')].filter(el=>el.getBoundingClientRect().right>innerWidth+1 && !el.closest('.staff-scroll'));
+     problems.push('overflow '+document.documentElement.scrollWidth+' from '+outside.slice(0,12).map(el=>(el.id||el.className||el.tagName)+' '+Math.round(el.getBoundingClientRect().right)).join(', '));
    }
    return problems;
   });
@@ -224,10 +224,34 @@ for(const width of [320,390,768,1440]){
   await page.setViewportSize({width,height:800});await page.click('#newRiff');
   assert.ok(await page.locator('#riffDialog').evaluate(d=>d.scrollWidth<=d.clientWidth+1));
   await page.click('#closeRiff');
-  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  const overflow=await page.evaluate(()=>{
+    if(document.documentElement.scrollWidth<=innerWidth+1)return null;
+    return {width:innerWidth,page:document.documentElement.scrollWidth,elements:[...document.querySelectorAll('main *')].filter(e=>e.clientWidth && (e.scrollWidth>e.clientWidth+1 || e.getBoundingClientRect().right>innerWidth+1)).slice(0,30).map(e=>[e.id||e.className||e.tagName,e.clientWidth,e.scrollWidth,Math.round(e.getBoundingClientRect().right)])};
+  });
+  assert.equal(overflow,null,JSON.stringify(overflow));
 }
 console.log('PASS riff editing, draft recovery, sustained notes, cross-bar loop bounds, count-in, gap, expansion, custom recall and export.');
 
+for(const width of [320,390,1440]){
+  await page.setViewportSize({width,height:844});
+  const [tab,neck]=await Promise.all([page.locator('.tab-panel').boundingBox(),page.locator('.neck-panel').boundingBox()]);
+  if(width>900)assert.ok(neck.x>=tab.x+tab.width-1);
+  else assert.ok(neck.y>=tab.y+tab.height-1);
+  for(const id of ['play','step','focusMode'])assert.ok((await page.locator('#'+id).boundingBox()).height>=44);
+}
+for(const scheme of ['dark','light']){
+  await page.emulateMedia({colorScheme:scheme});
+  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).colorScheme),scheme);
+}
+const cover=await page.request.get(new URL('/acoustic-cover.webp',page.url()).href);
+assert.equal(cover.status(),200);assert.equal((await cover.body()).subarray(8,12).toString(),'WEBP');
+await page.click('#focusMode');
+assert.equal(await page.locator('#focusMode').getAttribute('aria-pressed'),'true');
+assert.ok(await page.locator('.lesson-head').isHidden());
+await page.click('#step');
+assert.ok(await page.locator('.fret.selected').count()>0);
+await page.keyboard.press('Escape');
+assert.ok(await page.locator('.lesson-head').isVisible());
 await require('./learning-tools.cjs')(page,assert);
 assert.deepEqual(errors,[]);console.log('PASS progression, timing, loop boundaries, transport, metronome handoff, blind quiz, note quiz, timer expiry, completion, export, legacy persistence.');
 }finally{await browser?.close();server.close()}
