@@ -190,6 +190,8 @@ function render(){
   $('nextExercise').hidden=!next;
   if(next){$('nextExercise').href='#exercise/'+next.id;$('nextExercise').textContent=count?'Continue practice':'Start practice'}
   else $('finishNotice').textContent='All exercises complete for today.';
+  $('songList').replaceChildren(...Array.from(songLessons.values(),ex=>exerciseLink(ex,done[ex.id])));
+  if(!songLessons.size)$('songList').textContent='Your imported song lessons will appear here.';
   $('savedRiffs').hidden=!riffLessons.size;
   $('riffList').replaceChildren(...Array.from(riffLessons.values(),ex=>exerciseLink(ex,done[ex.id])));
   updateStats();

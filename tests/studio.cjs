@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
@@ -281,6 +281,22 @@ await page.clock.setFixedTime(new Date(tomorrow));
 await nav('Tools');await nav('Practice');
 assert.equal(await page.locator('#todayCount').innerText(),'0 of 11 done');
 assert.equal(await page.locator('#doneCount').textContent(),'2/11');
+await nav('Songs');
+const sample='X:1\nT:Test study\nM:3/4\nL:1/8\nQ:1/4=90\nK:none\n(3CDE [G,B,]2 z2 | ^F2 F2-F2 | Z |]';
+await page.locator('#abcFiles').setInputFiles({name:'study.abc',mimeType:'text/plain',buffer:Buffer.from(sample)});
+await page.getByText('1 song lesson ready on this device.').waitFor();
+await page.locator('#songList a').click();
+assert.equal(await page.locator('#noteBars button').count(),3);
+assert.deepEqual(await page.evaluate(()=>score().bars.map(b=>Math.round(b.reduce((a,e)=>a+e.beats,0)))),[3,3,3]);
+assert.equal(await page.evaluate(()=>score().bars[1][2].continuation),true);
+assert.deepEqual(await page.evaluate(()=>score().bars[1].map(e=>e.midis[0])),[66,66,66]);
+await page.locator('#noteBars button').nth(1).click();assert.equal(await page.locator('#phrase').inputValue(),'1');
+await page.click('#complete');assert.ok(await page.locator('#songsPage').isVisible());await page.reload();
+assert.equal(await page.locator('#songList .is-done').count(),1);
+const packed=require('node:zlib').gzipSync(JSON.stringify([sample,sample.replace('Test study','Second study')])).toString('base64url');
+await page.goto(page.url().split('#')[0]+'#songbook='+packed);await page.getByText('2 song lessons ready on this device.').waitFor();
+assert.equal(await page.locator('#songList a').count(),2);assert.equal(new URL(page.url()).hash,'#songs');
+console.log('PASS ABC imports, songbook links, triplets, accidentals, ties, chord voicings, named notes and daily song completion.');
 assert.deepEqual(errors,[]);console.log('PASS progression, timing, loop boundaries, transport, metronome handoff, blind quiz, note quiz, timer expiry, completion, export, legacy persistence.');
 }finally{await browser?.close();server.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

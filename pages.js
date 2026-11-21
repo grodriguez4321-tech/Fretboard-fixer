@@ -1,29 +1,33 @@
 // Hash routes keep each view bookmarkable on the static Netlify site.
 (() => {
-  const panels={practice:$('practicePage'),exercise:$('studio'),tools:$('toolsPage'),journal:$('journal')};
-  const headings={practice:$('practiceTitle'),exercise:$('lessonTitle'),tools:$('toolsTitle'),journal:$('journalTitle')};
+  const panels={practice:$('practicePage'),exercise:$('studio'),songs:$('songsPage'),tools:$('toolsPage'),journal:$('journal')};
+  const headings={practice:$('practiceTitle'),exercise:$('lessonTitle'),songs:$('songsTitle'),tools:$('toolsTitle'),journal:$('journalTitle')};
   let current='',applying=false,lastDay=dayKey(),feedback='',returnTo='',undo=null;
   function decodeRoute(){
     const hash=location.hash.slice(1);
     if(hash.startsWith('exercise/') && lessonById(hash.slice(9)))return hash;
     if(hash==='studio')return 'exercise/'+active.id;
-    return hash==='tools'||hash==='journal' ? hash : 'practice';
+    return hash==='tools'||hash==='songs'||hash==='journal' ? hash : 'practice';
   }
   function display(route,focus){
     const page=route.split('/')[0];
     for(const [name,panel] of Object.entries(panels))panel.hidden=name!==page;
+    const origin=songLessons.has(active.id)?'songs':'practice';
+    $('backChecklist').href='#'+origin;
+    $('backChecklist').textContent=origin==='songs'?'← My song lessons':'← Today’s practice';
     for(const a of document.querySelectorAll('.brandbar nav a')){
-      if(a.hash==='#'+(page==='exercise'?'practice':page))a.setAttribute('aria-current','page');
+      if(a.hash==='#'+(page==='exercise'?origin:page))a.setAttribute('aria-current','page');
       else a.removeAttribute('aria-current');
     }
     current=route;
     document.title=headings[page].textContent+' · Fretboard Fixer';
-    if(page!=='practice'){undo=null;$('undoDone').hidden=true}
+    if(page!=='practice' && page!=='songs'){undo=null;$('undoDone').hidden=true}
+    if(page==='songs'){render();if(feedback)$('abcStatus').textContent=feedback;feedback=''}
     if(page==='practice'){
       $('finishNotice').textContent=feedback;render();feedback='';
     }
     if(focus){
-      const row=page==='practice' && returnTo ? document.querySelector('.exercise-row[data-lesson="'+returnTo+'"]') : null;
+      const row=(page==='practice'||page==='songs') && returnTo ? document.querySelector('.exercise-row[data-lesson="'+returnTo+'"]') : null;
       if(row){row.focus({preventScroll:true});row.scrollIntoView({block:'nearest'});}
       else{window.scrollTo(0,0);headings[page].focus({preventScroll:true})}
     }
@@ -44,7 +48,7 @@
     applying=true;
     try{
       if(route.startsWith('exercise/'))openLesson(lessonById(route.slice(9)));
-      else if(route==='practice' && previous.startsWith('exercise/'))returnTo=previous.slice(9);
+      else if((route==='practice'||route==='songs') && previous.startsWith('exercise/'))returnTo=previous.slice(9);
       display(route,focus);
     }finally{applying=false}
   }
@@ -74,7 +78,7 @@
     $('undoDone').hidden=!undo;
     today[active.id]=true;
     store.done[active.id]=true;store.days[day]=true;save();
-    feedback=active.name+' completed.';navigate('practice',true);
+    feedback=active.name+' completed.';navigate(songLessons.has(active.id)?'songs':'practice',true);
   };
   $('undoDone').onclick=()=>{
     if(!undo || undo.day!==dayKey())return;
@@ -95,6 +99,36 @@
     setTimeout(()=>{refreshDate();nextMidnight()},tomorrow-Date.now()+100);
   }
   window.addEventListener('popstate',()=>apply());
-  window.addEventListener('hashchange',()=>apply());
-  apply(false);nextMidnight();
+  window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#songbook='))importLink();else apply()});
+  const status=$('abcStatus');
+  async function loadSongs(texts){
+    const count=await importAbcFiles(texts);
+    status.textContent=count+' song lesson'+(count===1?'':'s')+' ready on this device.';
+  }
+  $('abcFiles').onchange=async event=>{
+    try{
+      const files=Array.from(event.target.files);
+      if(!files.length)return;
+      if(files.length>32 || files.some(f=>f.size>24000))throw Error('Choose up to 32 short ABC excerpts.');
+      await loadSongs(await Promise.all(files.map(f=>f.text())));
+    }catch(e){status.textContent=e.message}finally{event.target.value=''}
+  };
+  async function importLink(){
+    const encoded=location.hash.slice('#songbook='.length);
+    history.replaceState(null,'','#songs');apply(false);
+    try{
+      if(encoded.length>24000 || !/^[A-Za-z0-9_-]+$/.test(encoded))throw Error('Invalid songbook.');
+      const bytes=Uint8Array.from(atob(encoded.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+      const reader=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')).getReader();
+      const decoder=new TextDecoder();let content='',size=0;
+      while(true){
+        const {value,done}=await reader.read();if(done)break;
+        size+=value.length;if(size>96000){await reader.cancel();throw Error('Songbook is too large.')}
+        content+=decoder.decode(value,{stream:true});
+      }
+      await loadSongs(JSON.parse(content+decoder.decode()));
+    }catch(e){status.textContent='Could not open this songbook. Select the ABC files below. '+e.message}
+  }
+  if(location.hash.startsWith('#songbook='))importLink();else apply(false);
+  nextMidnight();
 })();

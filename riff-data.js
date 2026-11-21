@@ -1,6 +1,6 @@
 // Saved riffs use the same beat and string numbering as the built-in scores.
 const riffLessons = new Map();
-const lessonById = id => riffLessons.get(id) || all.find(ex => ex.id === id);
+const lessonById = id => riffLessons.get(id) || songLessons.get(id) || all.find(ex => ex.id === id);
 const riffLengths = [.5, 1, 2, 4];
 if (!Array.isArray(store.riffs)) store.riffs = [];
 

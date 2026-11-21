@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fretboard Fixer · Practice studio</title><meta name="theme-color" content="#143e35">
 <link rel="stylesheet" href="studio.css"></head><body><main>
 <header class="brandbar"><a href="#practice" class="brand"><i aria-hidden="true"></i>Fretboard Fixer</a>
-<nav aria-label="Main navigation"><a href="#practice">Practice</a><a href="#tools">Tools</a><a href="#journal">Journal</a></nav></header>
+<nav aria-label="Main navigation"><a href="#practice">Practice</a><a href="#songs">Songs</a><a href="#tools">Tools</a><a href="#journal">Journal</a></nav></header>
 <section id="practicePage" aria-labelledby="practiceTitle">
   <header class="lesson-head daily-hero">
     <div id="todayDate" class="category"></div><h1 id="practiceTitle" tabindex="-1">Today’s practice</h1>
@@ -18,7 +18,7 @@
   <section id="savedRiffs" class="card" hidden><h2>My riffs</h2><div id="riffList"></div></section>
 </section>
 <section class="studio" id="studio" aria-labelledby="lessonTitle" hidden>
-  <a class="back-link" href="#practice">← Today’s practice</a>
+  <a id="backChecklist" class="back-link" href="#practice">← Today’s practice</a>
   <header class="lesson-head">
     <div class="category" id="category"></div><h1 id="lessonTitle" tabindex="-1"></h1><p id="objective"></p>
     <button hidden id="copyRiff">Edit a copy</button>
@@ -49,6 +49,7 @@
     <div id="quiz" hidden></div>
     </section>
   </div>
+  <section class="card" id="songNotes" hidden><h2>Notes by bar</h2><div id="noteBars"></div><div id="sourceNotes" class="hint"></div></section>
   <div class="practice-extras">
         <details class="range-tool" id="rangeTool"><summary>Tricky-change looper</summary>
       <p class="hint">Choose the first and last notes to repeat. A loop can cross a bar line.</p>
@@ -71,6 +72,11 @@
   <div id="logPanel"><h2>Practice log</h2><div class="log-buttons"><span id="timer" class="timer">03:00</span><button id="timerBtn">Start timer</button><button id="timerReset">Reset timer</button></div>
   <p class="hint">Start the timer to log practice minutes. Mark completion when you meet the goal.</p><div class="log-buttons"><button id="saveBest">Log clean BPM</button><span id="best" role="status"></span></div></div>
   <div class="finish-bar"><div><strong>Completion goal</strong><p id="exerciseGoal"></p></div><button id="complete" class="primary">Done</button></div>
+</section>
+<section id="songsPage" hidden aria-labelledby="songsTitle">
+  <header class="lesson-head daily-hero"><div class="category">Song practice</div><h1 id="songsTitle" tabindex="-1">My song lessons</h1><p>Choose an excerpt to practice its notes one bar at a time.</p></header>
+  <div id="songList" class="card"></div>
+  <label class="abc-import">Add ABC excerpts <input id="abcFiles" type="file" accept=".abc,text/plain" multiple></label><p class="hint" role="status" id="abcStatus"></p>
 </section>
 <section id="toolsPage" hidden aria-labelledby="toolsTitle"><header class="page-heading"><h1 id="toolsTitle" tabindex="-1">Learning tools</h1></header>
   <div id="toolTiles" class="tool-menu"></div>
@@ -109,6 +115,7 @@
 <script src="scores.js"></script>
 <script src="routine.js"></script>
 <script src="riff-data.js"></script>
+<script src="abc-lessons.js"></script>
 <script src="studio.js"></script>
 <script src="riff-editor.js"></script>
 <script src="coach.js"></script>

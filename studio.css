@@ -185,3 +185,10 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 }
 .checklist-feedback{display:flex;align-items:center;gap:10px}
 #undoDone{min-height:44px;background:transparent;border:0;color:var(--accent);text-decoration:underline}
+
+.abc-import{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-weight:650}
+.abc-import input{max-width:100%;font:inherit}
+.notes-row{display:flex;gap:15px;width:100%;text-align:left;margin-top:7px}
+.notes-row strong{white-space:nowrap}.notes-row span{font-family:var(--mono);font-weight:500}
+#sourceNotes,#abcStatus{margin:10px 0}.practice-focus #songNotes{display:none}
+@media(max-width:480px){.brandbar{flex-wrap:wrap;padding-top:8px;gap:0}.brandbar nav{width:100%;justify-content:space-between}}
