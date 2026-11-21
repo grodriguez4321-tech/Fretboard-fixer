@@ -258,3 +258,8 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 @media(max-width:520px){#toolTiles{grid-template-columns:1fr}}
 
 @media(max-width:380px){#labDialog{width:calc(100% - 12px);max-width:calc(100% - 12px);padding:10px}}
+
+#manageSongs{margin:12px 0}
+.song-row+.song-row{border-top:1px solid var(--line)}
+.song-actions{display:flex;gap:8px;padding-bottom:10px}
+#restoreSong{margin-block:6px}

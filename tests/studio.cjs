@@ -326,6 +326,34 @@ assert.deepEqual(explicitPull,['Pick','Pull-off','Rest']);
 const packed=require('node:zlib').gzipSync(JSON.stringify([sample,sample.replace('Test study','Second study')])).toString('base64url');
 await page.goto(page.url().split('#')[0]+'#songbook='+packed);await page.getByText('2 song lessons ready on this device.').waitFor();
 assert.equal(await page.locator('#songList a').count(),2);assert.equal(new URL(page.url()).hash,'#songs');
+const songs=page.locator('#songList'),otherSong=songs.getByRole('link',{name:/Second study/});
+const originalURL=await songs.getByRole('link',{name:/Test study/}).getAttribute('href');
+await page.getByRole('button',{name:'Manage songs'}).click();
+async function swap(oldName,text){
+  const chooseFile=page.waitForEvent('filechooser');
+  await songs.getByRole('button',{name:'Replace '+oldName,exact:true}).click();
+  await (await chooseFile).setFiles({name:'edit.abc',mimeType:'text/plain',buffer:Buffer.from(text)});
+}
+await swap('Test study','invalid');
+await page.locator('#abcStatus').getByText(/titled/).waitFor();
+assert.equal(await songs.getByRole('link',{name:/Test study/}).getAttribute('href'),originalURL);
+await swap('Test study',sample.replace('Test study','Second study'));
+await page.getByText(/already in your list/).waitFor();
+await swap('Test study',sample.replace('Test study','Updated study'));
+await songs.getByRole('link',{name:/Updated study/}).waitFor();assert.ok(await otherSong.isVisible());
+assert.equal(await songs.locator('a').count(),2);
+await page.reload();await songs.getByRole('link',{name:/Updated study/}).click();await page.locator('#studio').waitFor();
+await nav('Songs');await page.click('#manageSongs');
+const remove=songs.getByRole('button',{name:'Remove Updated study'});
+page.once('dialog',d=>d.dismiss());await remove.click();
+assert.equal(await songs.locator('a').count(),2);
+page.once('dialog',d=>d.accept());await remove.click();await page.getByText('Updated study removed.').waitFor();
+assert.equal(await songs.locator('a').count(),1);assert.ok(await otherSong.isVisible());
+await page.click('#restoreSong');await page.getByText('Song lesson restored.').waitFor();
+assert.equal(await songs.locator('a').count(),2);
+page.once('dialog',d=>d.accept());await remove.click();
+await page.reload();assert.equal(await songs.locator('a').count(),1);assert.ok(await otherSong.isVisible());
+console.log('PASS per-song remove, cancel, undo, replacement validation, duplicate detection and persistence.');
 console.log('PASS ABC imports, songbook links, triplets, accidentals, ties, chord voicings, named notes and daily song completion.');
 assert.deepEqual(errors,[]);console.log('PASS progression, timing, loop boundaries, transport, metronome handoff, blind quiz, note quiz, timer expiry, completion, export, legacy persistence.');
 }finally{await browser?.close();server.close()}

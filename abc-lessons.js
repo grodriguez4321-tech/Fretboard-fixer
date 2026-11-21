@@ -116,7 +116,7 @@ function compileAbc(text){
   return {name:title,descriptor,sourceBpm,bpm:startBpm,meter,bars,labels,steps,comments};
 }
 
-async function importAbcFiles(texts){
+async function importAbcFiles(texts,replaceId=null){
   const songs=[];
   if(!Array.isArray(texts)||!texts.length||texts.length>32)throw Error('Choose 1–32 ABC files.');
   for(const text of texts){
@@ -125,12 +125,32 @@ async function importAbcFiles(texts){
     const id='abc-'+Array.from(hash.slice(0,12),b=>b.toString(16).padStart(2,'0')).join('');
     songs.push({id,text,parsed});
   }
-  const library={...store.abcLibrary};
-  for(const s of songs)library[s.id]=s.text;
-  const previous=store.abcLibrary;store.abcLibrary=library;
-  try{save()}catch(error){store.abcLibrary=previous;throw error}
-  songs.forEach(s=>registerAbc(s.id,s.parsed));refreshRiffPicker();render();
+  if(replaceId && !songLessons.has(replaceId))throw Error('This lesson has already been removed.');
+  if(replaceId && songs[0].id!==replaceId && songLessons.has(songs[0].id))throw Error('That song is already in your list. Choose a different ABC file.');
+  commitSongLibrary(songs,replaceId===songs[0].id?null:replaceId);
   return songs.length;
+}
+function commitSongLibrary(songs,removeId){
+  const previous=store.abcLibrary,previousSession=store.quickSession;
+  const library={...previous};
+  if(removeId)delete library[removeId];
+  for(const song of songs)library[song.id]=song.text;
+  store.abcLibrary=library;
+  // A resumed session must always point to playable scores.
+  if(removeId && previousSession){
+    const fallback=p=>p?.lesson===removeId?{lesson:'song',level:0,phrase:'all',cursor:0,bpm:lessonById('song').bpm}:p;
+    const plan=previousSession.plan.map(fallback);
+    store.quickSession={...previousSession,plan,position:fallback(previousSession.position),
+      review:plan[0]===previousSession.plan[0]?previousSession.review:null};
+  }
+  try{save()}catch(error){store.abcLibrary=previous;store.quickSession=previousSession;throw error}
+  if(removeId){
+    document.dispatchEvent(new CustomEvent('songwillunload',{detail:removeId}));
+    songLessons.delete(removeId);delete scores[removeId];
+  }
+  songs.forEach(s=>registerAbc(s.id,s.parsed));
+  refreshRiffPicker();$('lesson').value=active.id;render();
+  document.dispatchEvent(new Event('songlibrarychange'));
 }
 function registerAbc(id,parsed){
   const {name,descriptor,sourceBpm,bpm,meter,bars,labels,steps,comments}=parsed;

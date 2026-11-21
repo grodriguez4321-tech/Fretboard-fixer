@@ -6,6 +6,7 @@
   function decodeRoute(){
     const hash=location.hash.slice(1);
     if(hash.startsWith('exercise/') && lessonById(hash.slice(9)))return hash;
+    if(hash.startsWith('exercise/abc-'))return 'songs';
     if(hash==='studio')return 'exercise/'+active.id;
     return hash==='tools'||hash==='songs'||hash==='journal' ? hash : 'practice';
   }
@@ -101,6 +102,53 @@
   }
   window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#songbook='))importLink();else apply()});
   const status=$('abcStatus');
+  const manager=$('manageSongs'),replacement=$('replacementAbc'),restore=$('restoreSong');
+  let replaceId=null,removed=null;
+  manager.onclick=()=>{
+    const on=manager.getAttribute('aria-pressed')!=='true';
+    manager.setAttribute('aria-pressed',String(on));manager.textContent=on?'Finish managing':'Manage songs';render();
+  };
+  document.addEventListener('songwillunload',event=>{
+    if(undo?.id===event.detail){undo=null;$('undoSong').hidden=true}
+    if(active.id===event.detail){
+      applying=true;
+      try{openLesson(all[0])}finally{applying=false}
+    }
+  });
+  $('songList').onclick=event=>{
+    const button=event.target.closest('button[data-song]');
+    if(!button)return;
+    const id=button.dataset.song,lesson=songLessons.get(id);
+    if(!lesson)return;
+    if(button.dataset.action==='Replace'){
+      replaceId=id;replacement.value='';replacement.click();return;
+    }
+    if(!confirm('Remove “'+lesson.name+'” from Songs on this device?'))return;
+    const text=store.abcLibrary[id];
+    try{
+      commitSongLibrary([],id);removed=text;restore.hidden=false;
+      status.textContent=lesson.name+' removed.';restore.focus();
+    }catch{status.textContent='Could not save this change. Try again.'}
+  };
+  replacement.onchange=async()=>{
+    const file=replacement.files[0],id=replaceId;replaceId=null;
+    if(!file || !id)return;
+    try{
+      if(file.size>24000)throw Error('Choose a short ABC excerpt under 24 KB.');
+      const name=songLessons.get(id)?.name;
+      await importAbcFiles([await file.text()],id);
+      status.textContent=name+' updated.';manager.focus();
+    }catch(e){status.textContent=e.message}
+    finally{replacement.value=''}
+  };
+  restore.onclick=async()=>{
+    const text=removed;if(!text)return;
+    try{
+      await importAbcFiles([text]);
+      if(removed===text){removed=null;restore.hidden=true}
+      status.textContent='Song lesson restored.';manager.focus();
+    }catch(e){status.textContent=e.message}
+  };
   async function loadSongs(texts){
     const count=await importAbcFiles(texts);
     status.textContent=count+' song lesson'+(count===1?'':'s')+' ready on this device.';
