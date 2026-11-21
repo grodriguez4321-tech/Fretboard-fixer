@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);

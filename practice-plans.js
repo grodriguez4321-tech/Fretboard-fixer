@@ -1,17 +1,25 @@
 if(!Array.isArray(store.songSections))store.songSections=[];
 lab.add('sections','Song-section map','Save an intro, verse or chorus from a riff. Practice sections and the jump between them.',()=>{
+  const view=toolVisual.panel('sections');
+  let timeline=[];
   const maps=[lessonById('song'),...riffLessons.values(),...songLessons.values()];
   const song=lab.select('Song or saved riff',maps.map(ex=>[ex.id,ex.name]),maps.some(ex=>ex.id===active.id)?active.id:'song');
   const title=document.createElement('input');title.maxLength=48;title.placeholder='Intro, verse, chorus…';
   const nameLabel=element('label','Section name');nameLabel.append(title);
   const first=lab.select('First note',[]),last=lab.select('Last note',[]);
   const speed=lab.select('Practice BPM',Array.from({length:29},(_,i)=>[40+5*i,40+5*i]),tempo());
-  const msg=lab.status(),list=element('div');
+  const msg=lab.status(),list=element('div'),barPicker=element('div',null,'bar-picker');
   function openPart(id,phrase,bpm){
     lab.dialog.close();restorePractice({lesson:id,level:0,phrase,bpm,cursor:0});
     looping=true;$('loop').setAttribute('aria-pressed','true');paint();$('studio').scrollIntoView();
   }
+  function drawRange(){
+    const records=store.songSections.filter(s=>s.lesson===song.input.value);
+    toolVisual.sections(view,timeline,Number(first.input.value),Number(last.input.value),records);
+  }
+  first.input.onchange=last.input.onchange=drawRange;
   function renderList(){
+    drawRange();
     list.replaceChildren();
     const records=store.songSections.filter(s=>s.lesson===song.input.value).sort((a,b)=>a.first-b.first||a.last-b.last);
     for(const [i,s] of records.entries()){
@@ -30,11 +38,22 @@ lab.add('sections','Song-section map','Save an intro, verse or chorus from a rif
     }
   }
   function loadNotes(){
-    const events=makeSequence(scores[song.input.value].bars,'all').filter(e=>!e.continuation);
+    timeline=makeSequence(scores[song.input.value].bars,'all');
+    const events=timeline.filter(e=>!e.continuation);
     for(const f of [first,last]){
       f.input.replaceChildren();for(const e of events)f.input.add(new Option((e.sourceIndex+1)+'. '+describe(e)[0]+' · bar '+(e.bar+1),e.sourceIndex));
     }
-    last.input.value=String(events.at(-1).sourceIndex);renderList();msg.textContent='';
+    last.input.value=String(events.at(-1).sourceIndex);
+    barPicker.replaceChildren();
+    for(const [bar] of scores[song.input.value].bars.entries()){
+      const notes=events.filter(e=>e.bar===bar);
+      if(!notes.length)continue;
+      barPicker.append(lab.button('Bar '+(bar+1),()=>{
+        first.input.value=notes[0].sourceIndex;last.input.value=notes.at(-1).sourceIndex;
+        drawRange();msg.textContent='Bar '+(bar+1)+' selected.';
+      }));
+    }
+    renderList();msg.textContent='';
   }
   const add=lab.button('Save section',()=>{
     const name=title.value.trim(),a=Number(first.input.value),b=Number(last.input.value);
@@ -42,7 +61,7 @@ lab.add('sections','Song-section map','Save an intro, verse or chorus from a rif
     store.songSections.push({id:crypto.randomUUID(),lesson:song.input.value,name,first:a,last:b,bpm:Number(speed.input.value)});
     save();title.value='';msg.textContent='Section saved on this device.';renderList();
   },'primary');
-  lab.body.append(element('p','Map sections in one saved riff. A section join plays the last note of one section and the first note of the next.'),lab.fields(song.box,nameLabel),lab.fields(first.box,last.box,speed.box),add,msg,list);
+  lab.body.append(view.surface,element('p','Map sections in one saved riff. A section join plays the last note of one section and the first note of the next.'),lab.fields(song.box,nameLabel),barPicker,lab.fields(first.box,last.box,speed.box),add,msg,list);
   song.input.onchange=loadNotes;loadNotes();
 });
 

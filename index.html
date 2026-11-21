@@ -80,9 +80,9 @@
 </section>
 <section id="toolsPage" hidden aria-labelledby="toolsTitle"><header class="page-heading"><h1 id="toolsTitle" tabindex="-1">Learning tools</h1></header>
   <div id="toolTiles" class="tool-menu"></div>
-  <section class="card"><h2>Riff builder</h2><p>Write a phrase, save it, and play it in the studio.</p><button id="newRiff">Build a riff</button></section>
+  <section class="card riff-tool"><h2>Riff builder</h2><div id="riffPreview" class="riff-ribbon" role="img"></div><p>Tap the fretboard to write a phrase, then play it in the studio.</p><button id="newRiff">Build a riff</button></section>
 
-<section class="card" id="metronome"><div class="row between"><h2>Standalone metronome</h2><span id="beatCount" class="pill">4 beats / bar</span></div><div class="row"><span class="bpm" id="bpmDisplay">60</span><span class="muted">BPM</span></div><input id="bpm" aria-label="Tempo" type="range" min="40" max="180" step="5" value="60"><div class="row between"><div class="row"><label for="beats">Beats</label><select id="beats"><option>2</option><option>3</option><option selected>4</option><option>6</option></select></div><button class="primary" id="metroBtn">Start click</button><div id="dots" class="dots"></div></div><p class="muted" style="font-size:.85rem">Tap Start to enable audio. Beat one is accented. Adjust tempo while playing.</p></section>
+<section class="card" id="metronome"><div class="row between"><h2>Standalone metronome</h2><span id="beatCount" class="pill">4 beats / bar</span></div><div class="row"><span class="bpm" id="bpmDisplay">60</span><span class="muted">BPM</span></div><input id="bpm" aria-label="Tempo" type="range" min="40" max="180" step="5" value="60"><div class="row between"><div class="row"><label for="beats">Beats</label><select id="beats"><option>2</option><option>3</option><option selected>4</option><option>6</option></select></div><button class="primary" id="metroBtn">Start click</button></div><div id="dots" class="dots" aria-label="Beat pattern"></div><p class="muted" style="font-size:.85rem">Tap Start to enable audio. Beat one is accented. Adjust tempo while playing.</p></section>
 </section>
 <section id="journal" hidden aria-labelledby="journalTitle"><header class="page-heading"><h1 id="journalTitle" tabindex="-1">Practice journal</h1></header>
 <section class="card"><h2>Overall progress</h2><div class="grid" style="margin:16px 0"><div class="mini"><div id="doneCount" class="stat">0/11</div><div class="muted">exercises done</div></div><div class="mini"><div id="practiceTime" class="stat">0m</div><div class="muted">practice logged</div></div><div class="mini"><div id="streak" class="stat">0</div><div class="muted">practice days</div></div></div><button id="resetRoutine">Reset progress</button></section>
@@ -102,7 +102,7 @@
   <p class="hint">Tap a fret to add a note. The high E string is on top. Column 0 is the open string.</p>
   <div id="entryNeck"></div>
   <div class="log-buttons"><button id="addRest">Add rest</button><button id="undoNote">Undo</button></div>
-  <h3>Your sequence</h3><div id="draftNotes" aria-label="Notes in playing order"></div>
+  <h3>Your sequence</h3><div id="riffRibbon" class="riff-ribbon" role="img" aria-label="Empty sequence"></div><div id="draftNotes" aria-label="Notes in playing order"></div>
   <div id="noteEdit" hidden><button id="replaceNote">Replace selected</button><button id="deleteNote">Remove selected</button></div>
   <p id="draftStatus" role="status"></p>
   <div class="log-buttons"><button class="primary" id="saveRiff">Save and practice</button><button id="closeRiff">Close builder</button></div>
@@ -117,6 +117,7 @@
 <script src="riff-data.js"></script>
 <script src="abc-lessons.js"></script>
 <script src="studio.js"></script>
+<script src="tool-visuals.js"></script>
 <script src="riff-editor.js"></script>
 <script src="coach.js"></script>
 <script src="learning-tools.js"></script>

@@ -26,6 +26,7 @@ function estimateGuitarHz(samples, sampleRate) {
 }
 
 lab.add('mic','Acoustic note check','Play one note into your microphone. Match the pitch to advance.',()=>{
+  const view=toolVisual.panel('mic');toolVisual.meter(view);
   const readout=element('p','Microphone off','lab-metric'), target=element('p');
   const msg=lab.status(), follow=lab.select('Mode',[
     ['wait','Wait for the right note'],['listen','Pitch display only']
@@ -50,7 +51,7 @@ lab.add('mic','Acoustic note check','Play one note into your microphone. Match t
     request++;pending=false;cancelAnimationFrame(frame);
     if(stream)for(const t of stream.getTracks())t.stop();
     source?.disconnect();analyser?.disconnect();stream=null;source=null;analyser=null;
-    toggle.textContent='Start microphone';readout.textContent='Microphone off';
+    toolVisual.meter(view);toggle.textContent='Start microphone';readout.textContent='Microphone off';
     frames=quiet=0;matched=stable=null;
   }
   const toggle=lab.button('Start microphone',async()=>{
@@ -75,12 +76,13 @@ lab.add('mic','Acoustic note check','Play one note into your microphone. Match t
         analyser.getFloatTimeDomainData(data);
         const hz=estimateGuitarHz(data,audio.sampleRate);
         if(!hz){
-          stable=null;frames=0;if(++quiet>=2){matched=null;readout.textContent='Listening…'}return;
+          stable=null;frames=0;if(++quiet===2){toolVisual.meter(view);matched=null;readout.textContent='Listening…'}return;
         }
         quiet=0;
         const raw=69+12*Math.log2(hz/440),midi=Math.round(raw),cents=Math.round(100*(raw-midi));
         if(midi!==stable){stable=midi;frames=0}
         if(++frames<2)return;
+        toolVisual.meter(view,cents,midiName(midi));
         readout.textContent=midiName(midi)+' · '+(cents>0?'+':'')+cents+' cents';
         if(done || follow.input.value!=='wait' || !single())return;
         const pos=sequence[cursor].positions[0], wanted=tuning[pos.string-1]+pos.fret;
@@ -98,7 +100,7 @@ lab.add('mic','Acoustic note check','Play one note into your microphone. Match t
   const skip=lab.button('Skip',()=>{if(!done){advance();matched=null}});
   const restart=lab.button('Restart phrase',()=>{seek(0);done=false;matched=stable=null;frames=0;renderTarget()});
   follow.input.onchange=renderTarget;renderTarget();
-  lab.body.append(element('p','The microphone checks pitch and octave. Audio stays on this device. Use the tab for the intended string and fingering.'),follow.box,target,readout,lab.row(toggle,skip,restart),msg);
+  lab.body.append(view.surface,element('p','The microphone checks pitch and octave. Audio stays on this device. Use the tab for the intended string and fingering.'),follow.box,target,readout,lab.row(toggle,skip,restart),msg);
   lab.onStop(stopInput);
 });
 
@@ -111,9 +113,15 @@ lab.add('fingers','Alternate fingerings','Find the same pitch elsewhere or compa
     const frets=lab.select(label+' fret',Array.from({length:25},(_,i)=>[i,i]),p.fret);
     return {row:lab.fields(strings.box,frets.box),get:()=>tuning[Number(strings.input.value)-1]+Number(frets.input.value)};
   }
+  const view=toolVisual.panel('fingers');
   const a=inputFor('First',first),b=inputFor('Second',second),out=element('div');
-  function auditionPositions(positions){
-    silence();audition({positions,beats:1,action:'Pick'});
+  function option(positions,text,selected){
+    const b=lab.button(text,()=>{
+      out.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===b)));
+      toolVisual.neck(view,positions);silence();audition({positions,beats:1,action:'Pick'});
+    });
+    b.setAttribute('aria-pressed',String(selected));out.append(b);
+    if(selected)toolVisual.neck(view,positions);
   }
   function refresh(){
     const pair=mode.input.value==='pair';
@@ -121,7 +129,7 @@ lab.add('fingers','Alternate fingerings','Find the same pitch elsewhere or compa
     const targets=[a.get(),b.get()];
     out.append(element('h3',pair ? targets.map(midiName).join(' + ') : midiName(targets[0])));
     if(!pair){
-      for(const p of pitchPositions(targets[0]))out.append(lab.button(locationName(p),()=>auditionPositions([p])));
+      for(const p of pitchPositions(targets[0]))option([p],locationName(p),p.string===Number(a.row.querySelector('select').value));
       return;
     }
     const options=[];
@@ -132,9 +140,10 @@ lab.add('fingers','Alternate fingerings','Find the same pitch elsewhere or compa
       options.push({p,q,span,high:Math.max(0,...fretted)});
     }
     options.sort((x,y)=>x.span-y.span || x.high-y.high);
+    if(!options.length)toolVisual.neck(view,[]);
     if(!options.length)out.append(element('p','These pitches cannot sound simultaneously on separate strings within frets 0–24.'));
-    for(const {p,q,span} of options.slice(0,5))out.append(lab.button(locationName(p)+' + '+locationName(q)+' · span '+span,()=>auditionPositions([p,q])));
+    for(const [i,{p,q,span}] of options.slice(0,5).entries())option([p,q],locationName(p)+' + '+locationName(q)+' · span '+span,i===0);
   }
-  lab.body.append(element('p','Choose a string and fret. Tap a result to hear it. For pairs, span counts the distance between fretted notes. Open strings need no fretting finger.'),mode.box,a.row,b.row,out);
+  lab.body.append(view.surface,element('p','Choose a string and fret. Tap a result to hear it. For pairs, span counts the distance between fretted notes. Open strings need no fretting finger.'),mode.box,a.row,b.row,out);
   lab.body.onchange=refresh;lab.onStop(()=>{lab.body.onchange=null});refresh();
 });

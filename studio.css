@@ -192,3 +192,46 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 .notes-row strong{white-space:nowrap}.notes-row span{font-family:var(--mono);font-weight:500}
 #sourceNotes,#abcStatus{margin:10px 0}.practice-focus #songNotes{display:none}
 @media(max-width:480px){.brandbar{flex-wrap:wrap;padding-top:8px;gap:0}.brandbar nav{width:100%;justify-content:space-between}}
+
+/* Instrument displays share the same ink, string and beat markings in both themes. */
+.tool-visual{background:#192e25;color:#e7eee5;border:1px solid #365447;border-radius:12px;overflow:hidden;min-width:0}
+.visual-heading{padding:11px 14px 0;font:650 .85rem/1.5 var(--mono);color:#cae6cf}
+.tool-visual svg{display:block;width:100%;max-width:470px;margin:auto;font-family:var(--mono)}
+#labBody>.tool-visual{margin:16px 0 14px}
+.tool-menu{gap:12px}
+.tool-menu button{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:0 15px 15px;overflow:hidden;background:var(--card);border-color:var(--line);border-radius:13px;font-size:1.03rem}
+.tool-menu button::after{display:none}
+.tool-menu small{font-size:.9rem;margin:4px 0 0}
+.tool-menu .tool-visual{width:calc(100% + 30px);margin:0 -15px 13px;flex:none;height:92px;display:grid;place-items:center;border:0;border-radius:0;background:linear-gradient(115deg,#1a3027,#264b39)}
+.tool-menu .visual-heading{display:none}
+.tool-menu .tool-visual svg{width:100%;height:79px}
+.tool-menu .visual-harmony,.tool-menu .visual-fingers{background:linear-gradient(110deg,#362d21,#494036)}
+.tool-menu .visual-sections,.tool-menu .visual-rhythm{background:linear-gradient(110deg,#1e3033,#2e4649)}
+#toolTiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+#toolsPage .riff-tool,#toolsPage #metronome{margin-block:14px}
+.riff-tool p{margin-block:8px 12px}
+.riff-ribbon{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:5px;padding:8px;background:#1a3027;border-radius:10px;margin:10px 0}
+.riff-measure{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:1px;align-items:center;min-height:36px;background:repeating-linear-gradient(to right,#587064 0 1px,transparent 1px 25%);overflow:hidden}
+.riff-measure span{line-height:24px;text-align:center;border-radius:3px;font:600 .75rem/24px var(--mono)}
+.riff-measure .tone{background:#b5dfbc;color:#153125}.riff-measure .rest{border:1px dashed #aebeb2;color:#e1eae2}.riff-measure .chosen{background:#ffd184;color:#14271e}
+.riff-measure.empty span{grid-column:span 2;color:#cfdfd1}
+#dots{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;margin:14px 0 5px;padding:9px;background:#1a3027;border-radius:10px}
+#dots .dot{width:auto;height:36px;display:grid;place-items:center;border:1px solid #638074;border-radius:6px;color:#d5e1d6;background:#2d4539;font:650 1rem var(--mono)}
+#dots .dot:first-child{border-top:3px solid #ffd184}
+#dots .dot.lit{background:#b7efc0;color:#182c21}#dots .dot:first-child.lit{background:#ffd184}
+#labBody button[aria-pressed]{margin:2px}
+@media(max-width:790px){#toolTiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){
+  #toolTiles,.tool-menu{grid-template-columns:minmax(0,1fr);gap:9px}
+  .tool-menu button{display:grid;grid-template-columns:94px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;padding:10px;align-items:center;text-align:left;font-size:1rem}
+  .tool-menu .tool-visual{grid-column:1;grid-row:1/3;width:94px;height:74px;border-radius:7px;margin:0;overflow:hidden}
+  .tool-menu .tool-visual svg{width:100%;height:100%}
+  .tool-menu small{grid-column:2;font-size:.83rem;margin:2px 0 0}
+  .visual-heading{padding:8px 10px 0}
+}
+.ear-neck{display:grid;grid-template-columns:minmax(44px,.75fr) repeat(3,minmax(0,1fr));align-items:center;gap:4px;margin:12px 0}
+.ear-neck:empty{display:none}
+.ear-neck span{font-size:.85rem;text-align:center;color:var(--muted)}
+.ear-neck button{background:linear-gradient(transparent 48%,var(--line) 49% 52%,transparent 53%),var(--panel);font:650 1rem var(--mono)}
+.ear-neck button[data-answer=correct]{background:var(--soft);border:2px solid var(--accent)}.ear-neck button[data-answer=retry]{border:2px dashed var(--muted)}
+.bar-picker{display:flex;flex-wrap:wrap;gap:5px;margin-block:8px}

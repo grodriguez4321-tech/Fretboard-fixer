@@ -9,6 +9,9 @@ module.exports=async function(page,assert,choose,nav){
     await page.setViewportSize({width,height:844});
     for(const name of ['Alternate fingerings','Acoustic note check','Song-section map','Rhythm trainer','Melody by ear','Chord and melody playground']){
       await open(name);
+      const graph=box.locator('#labBody > .tool-visual svg');
+      assert.ok(await graph.isVisible(),name+' diagram');
+      assert.ok((await graph.getAttribute('aria-label')).length>4);
       assert.ok(await box.evaluate(d=>d.scrollWidth<=d.clientWidth+1),name+' width '+width);
     }
     await close();
@@ -16,6 +19,8 @@ module.exports=async function(page,assert,choose,nav){
   await open('Alternate fingerings');
   await box.getByLabel('First string').selectOption('2');await box.getByLabel('First fret').selectOption('10');
   assert.ok(await button('high E string · fret 5').isVisible());
+  await button('high E string · fret 5').click();
+  assert.equal(await box.locator('svg').getAttribute('aria-label'),'high E string · fret 5');
   await box.getByLabel('Explore').selectOption('pair');
   await box.getByLabel('Second string').selectOption('1');await box.getByLabel('Second fret').selectOption('3');
   assert.match(await box.locator('h3').innerText(),/A4 \+ G4/);
@@ -53,6 +58,7 @@ module.exports=async function(page,assert,choose,nav){
     fakeMic.hz=110;
   });
   await button('Start microphone').click();await box.getByText(/Heard A2/).waitFor();
+  assert.match(await box.locator('svg').getAttribute('aria-label'),/A2 at/);
   assert.equal(await page.evaluate(()=>cursor),0);
   await page.evaluate(()=>{const p=sequence[0].positions[0];fakeMic.hz=pitchAt(p.string,p.fret).hz});
   await page.waitForFunction(()=>cursor===1);await page.waitForTimeout(220);
@@ -65,18 +71,23 @@ module.exports=async function(page,assert,choose,nav){
   await box.getByLabel('Tempo').selectOption('120');await box.getByLabel('Test click').selectOption('gap');
   await button('Start tap test').click();await box.getByText(/Your turn/).waitFor();
   await button('Tap here').click();await box.getByText(/hits matched/).waitFor();
+  assert.match(await box.locator('svg').getAttribute('aria-label'),/1 taps recorded/);
 
   await open('Melody by ear');
   await page.evaluate(()=>{window.realRandom=Math.random;Math.random=()=>0});
   await button('New phrase').click();await page.evaluate(()=>Math.random=window.realRandom);
+  assert.equal(await box.locator('svg text').allTextContents().then(values=>values.filter(v=>v==='?').length),3);
   await button('Reveal next note').click();await box.getByText(/Note 1 · B string · fret 5/).waitFor();
   for(const fret of [8,5,7,5])await button('B string · fret '+fret).click();
   await box.getByText('Complete · 1 hints · 1 retries').waitFor();
 
   await open('Chord and melody playground');await button('C4').click();await button('E4').click();
   await button('Compare melody').click();await box.getByText('Same melody over Am').waitFor();
+  assert.match(await box.locator('svg').getAttribute('aria-label'),/Playing Am/);
   await box.getByText('Same melody over C',{exact:true}).waitFor();await button('Stop sound').click();
   await open('Song-section map');await box.getByLabel('Song or saved riff').selectOption('song');
+  await button('Bar 2').click();
+  assert.match(await box.locator('svg').getAttribute('aria-label'),/Notes 5 through/);
   async function section(name,a,b){
     await box.getByLabel('Section name').fill(name);await box.getByLabel('First note').selectOption(a);
     await box.getByLabel('Last note').selectOption(b);await box.getByLabel('Practice BPM').selectOption('65');

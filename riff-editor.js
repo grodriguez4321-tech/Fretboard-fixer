@@ -8,9 +8,32 @@
   function entryLabel(e) {
     return (e.string ? stringNames[e.string-1]+' '+e.fret : 'Rest')+' · '+e.beats+(e.beats===1?' beat':' beats');
   }
+  function drawRibbon(ribbon,events,selection,preview=false){
+    ribbon.replaceChildren();
+    const bars=compileRiff(events);
+    ribbon.setAttribute('aria-label',events.length ? 'Riff rhythm: '+events.length+' events in '+bars.length+' bars' : 'Empty four-beat bar');
+    for(const bar of (preview?bars.slice(0,2):bars)){
+      const measure=element('div',null,'riff-measure');
+      for(const part of bar){
+        const p=part.positions[0],piece=element('span',part.continuation?'↳':p?pitchAt(p.string,p.fret).name:'Rest');
+        piece.className=p?'tone':'rest';
+        if(part.sourceIndex===selection)piece.classList.add('chosen');
+        piece.style.gridColumn='span '+part.beats*2;measure.append(piece);
+      }
+      ribbon.append(measure);
+    }
+    if(!bars.length){
+      const empty=element('div',null,'riff-measure empty');
+      for(let i=1;i<=4;i++)empty.append(element('span',String(i)));
+      ribbon.append(empty);
+    }
+  }
+  drawRibbon($('riffPreview'),(store.riffDraft?.events||[]).filter(validRiffEvent),-1,true);
   function redraw(message) {
     const list=$('draftNotes');
     list.replaceChildren();
+    drawRibbon($('riffRibbon'),draft,selected);
+    drawRibbon($('riffPreview'),draft,-1,true);
     draft.forEach((e,i)=>{
       const button=element('button',(i+1)+'. '+entryLabel(e));
       button.setAttribute('aria-pressed',String(i===selected));
