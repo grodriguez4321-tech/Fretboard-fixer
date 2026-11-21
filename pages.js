@@ -56,11 +56,6 @@
     if(location.hash!=='#'+route)history[replace?'replaceState':'pushState'](null,'','#'+route);
     apply();
   }
-  document.addEventListener('click',event=>{
-    const a=event.target.closest('a[href^="#"]');
-    if(!a||event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
-    event.preventDefault();navigate(a.hash.slice(1));
-  });
   // Riff saves, phrase reviews and short sessions can enter a selected lesson
   // with their own tempo and range. Keep that transport state intact.
   document.addEventListener('lessonopened',()=>{
@@ -71,11 +66,13 @@
     display(route,true);
   });
   $('complete').onclick=()=>{
+    stopPage();
     const day=dayKey();
     store.dailyDone??={};
     const today=store.dailyDone[day]??={};
-    undo=today[active.id] ? null : {id:active.id,day,previous:store.done[active.id]};
+    undo=today[active.id] ? null : {id:active.id,day,previous:store.done[active.id],practiceDay:store.days[day]};
     $('undoDone').hidden=!undo;
+    $('undoSong').hidden=!undo;
     today[active.id]=true;
     store.done[active.id]=true;store.days[day]=true;save();
     feedback=active.name+' completed.';navigate(songLessons.has(active.id)?'songs':'practice',true);
@@ -84,13 +81,15 @@
     if(!undo || undo.day!==dayKey())return;
     delete store.dailyDone[undo.day][undo.id];
     if(undo.previous===undefined)delete store.done[undo.id];else store.done[undo.id]=undo.previous;
-    const id=undo.id;undo=null;$('undoDone').hidden=true;save();render();
-    $('finishNotice').textContent='Completion undone.';
+    if(!undo.practiceDay && !Object.keys(store.dailyDone[undo.day]).length)delete store.days[undo.day];
+    const id=undo.id;undo=null;$('undoDone').hidden=true;$('undoSong').hidden=true;save();render();
+    $(current==='songs'?'abcStatus':'finishNotice').textContent='Completion undone.';
     document.querySelector('.exercise-row[data-lesson="'+id+'"]')?.focus({preventScroll:true});
   };
+  $('undoSong').onclick=$('undoDone').onclick;
   function refreshDate(){
     if(dayKey()===lastDay)return;
-    lastDay=dayKey();undo=null;$('undoDone').hidden=true;$('finishNotice').textContent='';render();
+    lastDay=dayKey();undo=null;$('undoDone').hidden=true;$('undoSong').hidden=true;$('finishNotice').textContent='';render();
   }
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDate()});
   window.addEventListener('pageshow',refreshDate);
@@ -98,7 +97,6 @@
     const tomorrow=new Date();tomorrow.setHours(24,0,0,0);
     setTimeout(()=>{refreshDate();nextMidnight()},tomorrow-Date.now()+100);
   }
-  window.addEventListener('popstate',()=>apply());
   window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#songbook='))importLink();else apply()});
   const status=$('abcStatus');
   async function loadSongs(texts){

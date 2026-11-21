@@ -29,11 +29,13 @@ assert.equal(await page.locator('.exercise-row').count(),11);
 assert.equal(await page.locator('#todayCount').innerText(),'0 of 11 done');
 await page.click('#nextExercise');
 assert.equal(new URL(page.url()).hash,'#exercise/chromatic');
-await page.click('#timerBtn');await page.goBack();
+await page.click('#timerBtn');await page.evaluate(()=>history.back());await page.locator('#practicePage').waitFor();
 assert.ok(await page.locator('#practicePage').isVisible());
 assert.equal(await page.evaluate(()=>timerRunning),false);
 assert.equal(await page.locator('#todayCount').innerText(),'0 of 11 done');
-await page.goForward();assert.ok(await page.locator('#studio').isVisible());
+await page.evaluate(()=>history.forward());await page.locator('#studio').waitFor();
+await page.click('#step');assert.match(await page.locator('#placement').innerText(),/fret 6/);
+const deepLink=page.url();await page.goto(deepLink.split('#')[0]+'?open=lesson'+new URL(deepLink).hash);await page.locator('#studio').waitFor();
 await page.reload();assert.equal(await page.locator('#lesson').inputValue(),'chromatic');
 const pitches=await page.evaluate(()=>[
   pitchAt(1,5),pitchAt(2,10),pitchAt(3,2),pitchAt(6,0)
