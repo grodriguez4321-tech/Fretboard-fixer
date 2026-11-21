@@ -2,6 +2,10 @@
 :root{color-scheme:dark;--bg:#091317;--card:#122329;--panel:#1b3037;--line:#34515a;--txt:#e8f0f0;--muted:#a0b5bb;--mint:#73e1b9;--blue:#68b8f6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:16px system-ui,-apple-system,sans-serif}main{max-width:860px;margin:auto;padding:22px 15px 60px}h1{font-size:2rem;margin:0}h2{font-size:1.35rem;margin:0 0 12px}h3{font-size:1.05rem;margin:0 0 8px}.muted{color:var(--muted)}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin:18px 0}.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.between{justify-content:space-between}button,select{border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--txt);padding:10px 14px;font:inherit;cursor:pointer}button.primary{background:var(--mint);color:#07241c;font-weight:750;border:0}button:disabled{opacity:.4;cursor:not-allowed}button.active{border-color:var(--mint);color:var(--mint)}input[type=range]{width:100%;accent-color:var(--mint)}.bpm{font-size:2.4rem;font-weight:800}.pill{border-radius:999px;padding:4px 10px;background:var(--panel);font-size:.8rem;color:var(--muted)}.exercise{border:1px solid var(--line);border-radius:15px;margin:10px 0;overflow:hidden}.exercise>button{display:block;width:100%;text-align:left;border:0;border-radius:0;background:var(--panel);padding:16px}.exercise>button .muted{display:block;margin-top:4px;font-size:.85rem}.details{padding:16px;display:none}.exercise.open .details{display:block}.tab{overflow-x:auto;background:#09171c;border-radius:10px;padding:14px;margin:12px 0;font:15px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre;color:#d6e7ed}.tab .current{background:var(--mint);color:#071b16;border-radius:3px}.steps{padding-left:21px;line-height:1.7}.stat{font-size:1.8rem;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.mini{background:var(--panel);border-radius:12px;padding:12px;text-align:center}.timer{font-variant-numeric:tabular-nums;font-size:2rem;font-weight:800}textarea{width:100%;min-height:90px;background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:12px;font:inherit}.dots{display:flex;gap:8px}.dot{height:12px;width:12px;border-radius:50%;background:#3c5b5b}.dot.lit{background:var(--mint)}.tag{color:var(--mint);font-size:.82rem;font-weight:700}.hidden{display:none!important}footer{color:var(--muted);font-size:.85rem;margin-top:30px}@media(max-width:540px){.card{padding:15px}.grid{grid-template-columns:repeat(3,1fr)}.stat{font-size:1.35rem}}
 </style><link rel="stylesheet" href="studio.css"></head><body><main><header class="brandbar"><a href="#studio" class="brand"><i aria-hidden="true">≋</i> Fretboard Fixer</a><nav><a href="#studio">Practice</a><a href="#routine">Routine</a><a href="#journal">Journal</a></nav></header>
 <section class="studio" id="studio" aria-labelledby="lessonTitle">
+  <aside id="reviewQueue" class="review-strip" hidden aria-label="Scheduled phrase review">
+    <div><strong id="reviewTitle"></strong><div id="reviewDetail" class="hint"></div></div>
+    <button id="startReview">Try from memory</button>
+  </aside>
   <div class="lesson-head"><div><div class="category" id="category"></div><h1 id="lessonTitle"></h1><p id="objective"></p></div>
   <label class="choose">Exercise<select id="lesson"></select></label></div>
   <div class="surface">
@@ -11,6 +15,14 @@
     <div class="staff-scroll"><div id="staff"></div></div>
     <div class="transport"><button class="primary" id="play">▶ Play</button><button id="restart">Restart</button><button id="step">Step</button><button id="loop" aria-pressed="false">Loop</button></div>
     <div class="sound-row"><div class="tempo-step"><button id="slower" aria-label="Decrease tempo">−</button><b id="speed"></b><button id="faster" aria-label="Increase tempo">+</button></div><label><input type="checkbox" id="clickTrack" checked> Click</label><label><input type="checkbox" id="guideTone" checked> Notes</label></div>
+    <section class="phrase-coach" aria-labelledby="coachTitle">
+      <div class="coach-top"><div><h3 id="coachTitle">Phrase practice</h3>
+        <p id="coachHint">Learn a phrase with the tab, then try it from memory.</p></div>
+        <button id="coachStart">Train this phrase</button></div>
+      <div id="repControls" hidden><p id="repStatus" role="status"></p><div class="log-buttons">
+        <button id="repClean" class="primary">Clean pass</button><button id="repMiss">Missed a note or beat</button>
+        <button id="coachEnd">End drill</button></div></div>
+    </section>
     <div class="neck-head"><h2>Fretboard</h2><label><input type="checkbox" id="names" checked> Note names</label></div>
     <div id="neck"></div><div class="legend" id="legend"></div>
     <p id="explore" class="hint" aria-live="polite">Tap a fret to hear its pitch.</p>
@@ -24,7 +36,13 @@
 <section class="card"><div class="row between"><h2>Standalone metronome</h2><span id="beatCount" class="pill">4 beats / bar</span></div><div class="row"><span class="bpm" id="bpmDisplay">60</span><span class="muted">BPM</span></div><input id="bpm" aria-label="Tempo" type="range" min="40" max="180" step="5" value="60"><div class="row between"><div class="row"><label for="beats">Beats</label><select id="beats"><option>2</option><option>3</option><option selected>4</option><option>6</option></select></div><button class="primary" id="metroBtn">Start click</button><div id="dots" class="dots"></div></div><p class="muted" style="font-size:.85rem">Tap Start to enable audio. Beat one is accented. Adjust tempo while playing.</p></section>
 <section class="card" id="routine"><div class="row between"><div><h2>Today's guided routine</h2><div class="muted">25 minutes · 5 focused sections</div></div><button id="resetRoutine">Reset routine</button></div><div class="grid" style="margin:16px 0"><div class="mini"><div id="doneCount" class="stat">0/11</div><div class="muted">exercises done</div></div><div class="mini"><div id="practiceTime" class="stat">0m</div><div class="muted">practice logged</div></div><div class="mini"><div id="streak" class="stat">0</div><div class="muted">practice days</div></div></div><div id="sections"></div></section>
 <section class="card" id="journal"><h2>Practice notes</h2><p class="muted">What got cleaner? Where did your fingers hesitate?</p><textarea id="notes" placeholder="Today I played the 5–8 pattern cleanly at 65 BPM..."></textarea><div class="row between" style="margin-top:12px"><span id="saved" class="muted">Saved on this device</span><button id="export">Export progress (.json)</button></div></section><footer>Practice pain-free: don't force large stretches. Move the whole hand, reduce the span, or shift positions. Your data stays in this browser unless exported.</footer></main>
+<dialog id="recallDialog" aria-labelledby="recallTitle" aria-describedby="recallPrompt">
+  <p id="recallTarget" class="category"></p><h2 id="recallTitle"></h2><p id="recallPrompt"></p>
+  <p id="recallFeedback" role="status"></p>
+  <div id="recallActions" class="log-buttons"></div><button id="closeRecall">Back to studio</button>
+</dialog>
 <script src="scores.js"></script>
 <script src="routine.js"></script>
 <script src="studio.js"></script>
+<script src="coach.js"></script>
 </body></html>

@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','studio.css'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','studio.css'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':'text/html');fs.createReadStream(file).pipe(res);
@@ -96,6 +96,65 @@ const download=await dl;const contents=JSON.parse(fs.readFileSync(await download
 assert.equal(contents.notes,'Test journal');assert.equal(contents.bests['chromatic-bar1'],180);
 await page.reload();assert.equal(await page.locator('#notes').inputValue(),'Test journal');assert.equal(await page.locator('#doneCount').innerText(),'2/11');
 await page.selectOption('#lesson','chromatic');await page.setViewportSize({width:390,height:844});
+
+await page.selectOption('#lesson','song');
+await page.selectOption('#phrase','1');
+await page.click('#faster');
+await page.click('#coachStart');
+assert.match(await page.locator('#coachHint').innerText(),/bar 2 · 60 BPM/);
+await page.click('#repClean');
+await page.click('#repMiss');
+assert.match(await page.locator('#repStatus').innerText(),/hesitation/);
+await page.click('#repClean');
+await page.click('#slower');
+assert.match(await page.locator('#repStatus').innerText(),/New tempo/);
+await page.click('#repClean');
+assert.equal(await page.locator('#recallDialog').isVisible(),false);
+await page.click('#repClean');
+assert.equal(await page.locator('#recallTitle').innerText(),'Switch tasks for two bars');
+await page.click('#recallClick');
+assert.equal(await page.locator('#recallClick').innerText(),'Stop click');
+await page.getByRole('button',{name:'Try original phrase from memory'}).click();
+assert.equal(await page.locator('#recallTitle').innerText(),'Play it from memory');
+assert.equal(await page.locator('#recallClick').innerText(),'Start click');
+await page.getByRole('button',{name:'Played it cleanly'}).click();
+await page.click('#closeRecall');
+let review=await page.evaluate(()=>store.phraseReviews['song/0/1']);
+assert.equal(review.bpm,55);
+assert.equal(review.streak,0);
+assert.equal(review.reviews,0);
+assert.ok(Math.abs(review.due-Date.now()-86400000)<10000);
+assert.equal(await page.locator('#startReview').isVisible(),false);
+await page.evaluate(()=>{store.phraseReviews['song/0/1'].due=Date.now()-100;save()});
+await page.reload();
+await page.click('#startReview');
+assert.equal(await page.locator('#recallTitle').innerText(),'First try of this review');
+await page.getByRole('button',{name:'Played it cleanly'}).click();
+await page.click('#closeRecall');
+review=await page.evaluate(()=>store.phraseReviews['song/0/1']);
+assert.equal(review.streak,1);
+assert.equal(review.reviews,1);
+assert.ok(Math.abs(review.due-Date.now()-3*86400000)<10000);
+await page.evaluate(()=>{store.phraseReviews['song/0/1'].due=Date.now()-100;save()});
+await page.reload();await page.click('#startReview');
+await page.getByRole('button',{name:'Needed a cue'}).click();
+await page.getByRole('button',{name:'Practice this phrase',exact:true}).click();
+assert.equal(await page.locator('#lesson').inputValue(),'song');
+assert.equal(await page.locator('#phrase').inputValue(),'1');
+assert.equal(await page.locator('#speed').innerText(),'55 BPM');
+assert.equal(await page.locator('#repClean').isVisible(),true);
+assert.equal(await page.locator('#doneCount').innerText(),'2/11');
+assert.equal(await page.locator('#notes').inputValue(),'Test journal');
+await page.selectOption('#lesson','emam');
+assert.equal(await page.locator('#repClean').isVisible(),false);
+await page.click('#coachStart');
+assert.match(await page.locator('#coachHint').innerText(),/both bars/);
+await page.setViewportSize({width:320,height:640});
+await page.click('#repClean');await page.click('#repClean');
+assert.ok(await page.locator('#recallDialog').evaluate(d=>d.scrollWidth<=d.clientWidth+1));
+await page.keyboard.press('Escape');
+assert.equal(await page.locator('#recallDialog').isVisible(),false);
+console.log('PASS phrase training, repair, tempo change, cue-free recall, delayed review, target restoration and phone dialog.');
 
 assert.deepEqual(errors,[]);console.log('PASS progression, timing, loop boundaries, transport, metronome handoff, blind quiz, note quiz, timer expiry, completion, export, legacy persistence.');
 }finally{await browser?.close();server.close()}
