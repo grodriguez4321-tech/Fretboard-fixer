@@ -22,6 +22,7 @@ const nav=async name=>page.locator('.brandbar nav').getByRole('link',{name,exact
 const choose=async id=>{
   await nav('Practice');
   await page.locator('.exercise-row[data-lesson="'+id+'"]').click();
+  await page.locator('#studio').waitFor();
 };
 assert.ok(await page.locator('#practicePage').isVisible());
 assert.ok(await page.locator('#studio').isHidden());
@@ -35,7 +36,7 @@ assert.equal(await page.evaluate(()=>timerRunning),false);
 assert.equal(await page.locator('#todayCount').innerText(),'0 of 11 done');
 await page.evaluate(()=>history.forward());await page.locator('#studio').waitFor();
 await page.click('#step');assert.match(await page.locator('#placement').innerText(),/fret 6/);
-const deepLink=page.url();await page.goto(deepLink.split('#')[0]+'?open=lesson'+new URL(deepLink).hash);await page.locator('#studio').waitFor();
+const deepLink=page.url();await page.goto('about:blank');await page.goto(deepLink);await page.locator('#studio').waitFor();
 await page.reload();assert.equal(await page.locator('#lesson').inputValue(),'chromatic');
 const pitches=await page.evaluate(()=>[
   pitchAt(1,5),pitchAt(2,10),pitchAt(3,2),pitchAt(6,0)
