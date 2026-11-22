@@ -63,6 +63,10 @@ const fretAtlas=(()=>{
       (shape?chordLibrary.pretty(chordLibrary.symbol(chosen))+' · Shape '+(variation+1)+' of '+chosen.shapes.length+' · '+shape.frets.map(f=>f<0?'×':f).join(' '):'Choose a chord from the library.'):
       same?midiName(target)+' · '+pitchPositions(target).length+' matching positions. Tap a string to change the target.':
       midiName(target)+' · '+locationName(picked);
+    if(scale && cells.some(key=>key===document.activeElement)){
+      const inside=pattern.includes((target-root+120)%12);
+      caption+=' '+midiName(target)+(inside?' is in this scale.':' is outside this scale.');
+    }
     if(showHand)caption+=' Fingers cover frets '+$('handBase').value+'–'+(Number($('handBase').value)+3)+'.';
     $('atlasCaption').textContent=caption;
   }

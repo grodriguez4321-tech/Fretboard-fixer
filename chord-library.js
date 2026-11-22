@@ -8,7 +8,8 @@ const chordLibrary=(()=>{
   const pretty=s=>s.replace(/#/g,'♯').replace(/b/g,'♭');
   function normalize(text){
     const clean=text.trim().replace(/♯/g,'#').replace(/♭/g,'b').replace(/\s/g,'')
-      .replace(/Major7/ig,'maj7').replace(/minor/ig,'m').replace(/major$/i,'').replace(/maj$/,'').replace(/min(?=\d|$)/i,'m');
+      .replace(/^([a-g][#b]?)M(?=\d)/i,(whole,root)=>whole.endsWith('M')?root+'maj':whole)
+      .replace(/6\/9/g,'69').replace(/Major(?=\d)/ig,'maj').replace(/minor/ig,'m').replace(/major$/i,'').replace(/maj$/,'').replace(/min(?=\d|$)/i,'m');
     return clean.replace(/(^|\/)([a-gA-G])([#b]?)/g,(_,prefix,n,acc)=>{
       const pitch=n.toUpperCase()+acc;return prefix+(aliases[pitch]||pitch);
     });
