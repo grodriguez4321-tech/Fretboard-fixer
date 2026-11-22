@@ -292,3 +292,4 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 .atlas-cell[data-lit=no] span{visibility:hidden}
 @media(max-height:430px){.atlas-inner{overflow-y:auto}.atlas-inner>*{flex-shrink:0}#verticalScroll{min-height:100px}.atlas-controls{margin:0}}
 #verticalTrack{overflow:clip}#verticalScroll{overflow-x:hidden}
+.neck-head{flex-wrap:wrap}.neck-head label{max-width:100%}
