@@ -43,6 +43,17 @@ await page.route('**/.netlify/functions/public-tab?*',route=>route.fulfill({json
 await nav('Songs');await page.click('#ugAdd');await page.fill('#ugUrl',sampleUrl);await page.click('#ugForm button');await page.click('#ugSave');
 await page.reload();await page.getByRole('button',{name:/^Original practice/}).click();
 assert.ok(await page.locator('#ugRead').getByRole('button',{name:'Am',exact:true}).isVisible());
+const videoPanel=page.locator('.ug-video');
+await page.route('https://www.youtube-nocookie.com/**',route=>route.fulfill({body:'Test player'}));
+await videoPanel.locator('summary').click();
+await videoPanel.getByLabel('YouTube video link').fill('https://youtu.be/M7lc1UVf-VE');
+await videoPanel.getByRole('button',{name:'Save video'}).click();
+assert.match(await videoPanel.locator('iframe').getAttribute('src'),/embed\/M7lc1UVf-VE/);
+await page.click('#ugClose');await page.reload();await page.getByRole('button',{name:/^Original practice/}).click();
+assert.equal(await videoPanel.locator('iframe').count(),0);
+await videoPanel.locator('summary').click();await videoPanel.locator('iframe').waitFor();
+await videoPanel.getByRole('button',{name:'Remove video'}).click();
+await videoPanel.getByLabel('YouTube video link').waitFor();
 await page.click('#ugClose');await nav('Practice');
 assert.ok(await page.locator('#practicePage').isVisible());
 assert.ok(await page.locator('#studio').isHidden());

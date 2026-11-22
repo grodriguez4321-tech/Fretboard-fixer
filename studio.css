@@ -301,3 +301,5 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 #ugDialog input,#ugDialog textarea{min-width:0;width:100%;padding:10px;font:inherit}
 #ugRead{min-width:0}#ugRead p,#ugStatus{margin-block:8px}
 .ug-score{overflow:auto;max-height:50vh;line-height:1.6;background:var(--soft);padding:12px;border-radius:8px}
+
+.ug-video{margin:1rem 0;border-block:1px solid var(--line,#526258);padding:.6rem 0}.ug-video summary{cursor:pointer;padding:.5rem;font-weight:700}.ug-video>div{display:flex;flex-wrap:wrap;gap:.65rem;align-items:center}.ug-video iframe{display:block;width:100%;height:auto;aspect-ratio:16/9;min-height:200px;border:0;border-radius:8px;background:#111}.ug-video form{width:100%}
