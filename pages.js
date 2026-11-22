@@ -1,10 +1,11 @@
 // Hash routes keep each view bookmarkable on the static Netlify site.
 (() => {
-  const panels={chords:$('chordsPage'),practice:$('practicePage'),exercise:$('studio'),songs:$('songsPage'),tools:$('toolsPage'),journal:$('journal')};
-  const headings={chords:$('chordsTitle'),practice:$('practiceTitle'),exercise:$('lessonTitle'),songs:$('songsTitle'),tools:$('toolsTitle'),journal:$('journalTitle')};
+  const panels={zero:$('zeroPage'),chords:$('chordsPage'),practice:$('practicePage'),exercise:$('studio'),songs:$('songsPage'),tools:$('toolsPage'),journal:$('journal')};
+  const headings={zero:$('zeroTitle'),chords:$('chordsTitle'),practice:$('practiceTitle'),exercise:$('lessonTitle'),songs:$('songsTitle'),tools:$('toolsTitle'),journal:$('journalTitle')};
   let current='',applying=false,lastDay=dayKey(),feedback='',returnTo='',undo=null;
   function decodeRoute(){
     const hash=location.hash.slice(1);
+    if(/^zero\/([1-9]|1[0-9]|2[0-8])$/.test(hash))return hash;
     if(hash.startsWith('exercise/') && lessonById(hash.slice(9)))return hash;
     if(hash.startsWith('exercise/abc-'))return 'songs';
     if(hash==='studio')return 'exercise/'+active.id;
@@ -13,11 +14,13 @@
   function display(route,focus){
     const page=route.split('/')[0];
     for(const [name,panel] of Object.entries(panels))panel.hidden=name!==page;
+    if(page==='zero')zeroCourse.open(Number(route.split('/')[1]));
+    if(page==='practice')zeroCourse.home();
     const origin=songLessons.has(active.id)?'songs':'practice';
     $('backChecklist').href='#'+origin;
     $('backChecklist').textContent=origin==='songs'?'← My song lessons':'← Today’s practice';
     for(const a of document.querySelectorAll('.brandbar nav a')){
-      if(a.hash==='#'+(page==='exercise'?origin:page))a.setAttribute('aria-current','page');
+      if(a.hash==='#'+(page==='exercise'?origin:page==='zero'?'practice':page))a.setAttribute('aria-current','page');
       else a.removeAttribute('aria-current');
     }
     current=route;
