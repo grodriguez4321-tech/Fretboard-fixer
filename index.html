@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fretboard Fixer · Practice studio</title><meta name="theme-color" content="#143e35">
 <link rel="stylesheet" href="studio.css"></head><body><main>
 <header class="brandbar"><a href="#practice" class="brand"><i aria-hidden="true"></i>Fretboard Fixer</a>
-<nav aria-label="Main navigation"><a href="#practice">Practice</a><a href="#songs">Songs</a><a href="#tools">Tools</a><a href="#journal">Journal</a></nav></header>
+<nav aria-label="Main navigation"><a href="#practice">Practice</a><a href="#songs">Songs</a><a href="#chords">Chords</a><a href="#tools">Tools</a><a href="#journal">Journal</a></nav></header>
 <section id="practicePage" aria-labelledby="practiceTitle">
   <header class="lesson-head daily-hero">
     <div id="todayDate" class="category"></div><h1 id="practiceTitle" tabindex="-1">Today’s practice</h1>
@@ -43,8 +43,8 @@
     <div class="sound-row"><div class="tempo-step"><button id="slower" aria-label="Decrease tempo">−</button><b id="speed"></b><button id="faster" aria-label="Increase tempo">+</button></div><label><input type="checkbox" id="clickTrack" checked> Click</label><label><input type="checkbox" id="guideTone" checked> Notes</label></div>
     </section>
     <section class="surface neck-panel" aria-label="Interactive fretboard">
-    <div class="neck-head"><h2>Fretboard</h2><label><input type="checkbox" id="names" checked> Note names</label></div>
-    <div id="neck"></div><div class="legend" id="legend"></div>
+    <div class="neck-head"><h2>Fretboard</h2><label>Labels <select id="names"><option value="notes">Note names</option><option value="fingers">Fingers 1–4</option><option value="off">Off</option></select></label></div>
+    <div id="neck"></div><button type="button" data-open-atlas>Full-screen fretboard</button><div class="legend" id="legend"></div><p class="hint" id="fingerHint" hidden>· Choose your own finger for this note.</p>
     <p id="explore" class="hint" aria-live="polite">Tap a fret to hear its pitch.</p>
     <div id="quiz" hidden></div>
     </section>
@@ -80,7 +80,15 @@
   <input type="file" id="replacementAbc" accept=".abc,text/plain" hidden>
   <label class="abc-import">Add ABC excerpts <input id="abcFiles" type="file" accept=".abc,text/plain" multiple></label><p class="hint" role="status" id="abcStatus"></p><button id="undoSong" hidden>Undo</button><button id="restoreSong" hidden>Undo removal</button>
 </section>
+<section id="chordsPage" hidden aria-labelledby="chordsTitle">
+  <header class="page-heading"><h1 id="chordsTitle" tabindex="-1">Chord library</h1></header>
+  <div class="library-controls"><label>Find a chord <input id="chordSearch" type="search" placeholder="Try Am, F♯m7 or C/G" autocomplete="off"></label><button type="button" data-open-atlas>Full-screen fretboard</button></div>
+  <div id="chordRoots" class="root-strip" role="group" aria-label="Browse by root"></div>
+  <p class="hint">Read left to right from low E to high E. ○ Open · × Skip · 1 Index · 2 Middle · 3 Ring · 4 Pinky</p>
+  <p id="chordCount" role="status"></p><div id="chordCards"></div><button id="moreChords" hidden>Show more chords</button>
+</section>
 <section id="toolsPage" hidden aria-labelledby="toolsTitle"><header class="page-heading"><h1 id="toolsTitle" tabindex="-1">Learning tools</h1></header>
+  <button type="button" data-open-atlas>Full-screen fretboard</button>
   <div id="toolTiles" class="tool-menu"></div>
   <details class="more-tools" id="moreTools"><summary>More tools</summary><div id="otherTiles" class="tool-menu"></div>
   <section class="card riff-tool"><h2>Riff builder</h2><div id="riffPreview" class="riff-ribbon" role="img"></div><p>Tap the fretboard to write a phrase, then play it in the studio.</p><button id="newRiff">Build a riff</button></section>
@@ -90,6 +98,22 @@
 <section id="journal" hidden aria-labelledby="journalTitle"><header class="page-heading"><h1 id="journalTitle" tabindex="-1">Practice journal</h1></header>
 <section class="card"><h2>Overall progress</h2><div class="grid" style="margin:16px 0"><div class="mini"><div id="doneCount" class="stat">0/11</div><div class="muted">exercises done</div></div><div class="mini"><div id="practiceTime" class="stat">0m</div><div class="muted">practice logged</div></div><div class="mini"><div id="streak" class="stat">0</div><div class="muted">practice days</div></div></div><button id="resetRoutine">Reset progress</button></section>
 <section class="card"><h2>Practice notes</h2><p class="muted">What got cleaner? Where did your fingers hesitate?</p><textarea id="notes" placeholder="Today I played the 5–8 pattern cleanly at 65 BPM..."></textarea><div class="row between" style="margin-top:12px"><span id="saved" class="muted">Saved on this device</span><button id="export">Export progress (.json)</button></div></section></section><footer>Practice pain-free: don't force large stretches. Move the whole hand, reduce the span, or shift positions. Your data stays in this browser unless exported.</footer></main>
+<dialog id="atlas" aria-labelledby="atlasTitle">
+  <div class="atlas-inner">
+    <header class="score-head"><h2 id="atlasTitle">Fretboard explorer</h2><button id="atlasClose">Close</button></header>
+    <div class="atlas-controls">
+      <label>Overlay <select id="atlasMode"><option value="notes">All notes</option><option value="scale">Scale</option><option value="chord">Chord</option><option value="same">Same pitch</option></select></label>
+      <label>Labels <select id="atlasLabels"><option value="notes">Note names</option><option value="fingers">Fingers 1–4</option><option value="off">Off</option></select></label>
+      <label id="rootField">Root <select id="scaleRoot"></select></label>
+      <label id="scaleField">Scale <select id="scaleType"></select></label>
+      <label id="handField">Index fret <select id="handBase"></select></label>
+      <div id="atlasChordControls"><button id="chooseChord">Choose chord</button><button id="atlasVoicing">Next shape</button></div>
+    </div>
+    <p id="atlasCaption" class="hint" role="status"></p>
+    <div class="atlas-tuning" aria-hidden="true"><span></span><b>E</b><b>A</b><b>D</b><b>G</b><b>B</b><b>e</b></div>
+    <div id="verticalScroll" aria-label="Vertical fretboard" role="group"><div id="verticalTrack"></div></div>
+  </div>
+</dialog>
 <dialog id="labDialog" aria-labelledby="labTitle">
   <div class="score-head"><h2 id="labTitle">Learning tools</h2><button id="labClose">Close</button></div>
   <div id="labBody"></div><button id="labBack" hidden>All tools</button>
@@ -128,5 +152,7 @@
 <script src="pitch-tools.js"></script>
 <script src="music-drills.js"></script>
 <script src="practice-plans.js"></script>
+<script src="chord-library.js"></script>
+<script src="fretboard-explorer.js"></script>
 <script src="pages.js"></script>
 </body></html>

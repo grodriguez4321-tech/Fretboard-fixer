@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','chord-library.js','fretboard-explorer.js','chord-shapes.json','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
@@ -34,6 +34,55 @@ const choose=async id=>{
 assert.ok(await page.locator('#practicePage').isVisible());
 assert.ok(await page.locator('#studio').isHidden());
 assert.equal(await page.locator('.exercise-row').count(),11);
+await page.setViewportSize({width:320,height:700});
+await page.getByRole('link',{name:'Chords',exact:true}).click();
+await page.locator('.chord-card').first().waitFor();
+assert.equal(await page.locator('.chord-card').count(),9);
+const allShapes=JSON.parse(fs.readFileSync(path.join(__dirname,'..','chord-shapes.json')));
+assert.equal(allShapes.length,828);
+for(const c of allShapes){
+ assert.ok(c.shapes.length);
+ for(const shape of c.shapes){
+   assert.equal(shape.frets.length,6);
+   assert.ok(shape.frets.every((f,i)=>Number.isInteger(f) && f>=-1 && f<=24 && (f<=0?shape.fingers[i]===0:shape.fingers[i]>=1 && shape.fingers[i]<=4)));
+ }
+}
+await page.fill('#chordSearch','Dbm7');
+assert.match(await page.locator('.chord-card h2').first().innerText(),/^C♯m7$/);
+await page.fill('#chordSearch','C/G');
+assert.equal(await page.locator('.chord-card h2').first().innerText(),'C/G');
+await page.fill('#chordSearch','Am');
+const amCard=page.locator('.chord-card').first();
+await amCard.getByRole('button',{name:'Next shape'}).click();
+await amCard.getByRole('button',{name:'Show on fretboard'}).click();
+assert.equal(await page.locator('#atlasMode').inputValue(),'chord');
+assert.match(await page.locator('#atlasCaption').innerText(),/Am · Shape 2/);
+assert.ok(await page.locator('.atlas-cell[data-lit=yes]').count()>=3);
+await page.selectOption('#atlasLabels','fingers');
+await page.selectOption('#atlasMode','scale');
+await page.selectOption('#scaleRoot','9');await page.selectOption('#scaleType','Minor pentatonic');
+const atlasCell=(s,f)=>page.locator('.atlas-cell[data-string="'+s+'"][data-fret="'+f+'"]');
+assert.equal(await atlasCell(1,5).getAttribute('data-root'),'true');
+assert.equal(await atlasCell(1,5).textContent(),'1');
+assert.equal(await atlasCell(1,6).getAttribute('data-lit'),'no');
+await page.selectOption('#atlasLabels','notes');
+await page.selectOption('#scaleRoot','5');await page.selectOption('#scaleType','Major');
+assert.equal(await atlasCell(5,1).textContent(),'B♭');
+await page.selectOption('#atlasLabels','fingers');
+await page.selectOption('#atlasMode','same');await atlasCell(2,10).click();
+assert.equal(await atlasCell(1,5).getAttribute('data-lit'),'yes');
+assert.equal(await atlasCell(6,5).getAttribute('data-lit'),'no');
+await page.selectOption('#atlasMode','notes');await atlasCell(1,24).click();
+assert.match(await page.locator('#atlasCaption').innerText(),/E6/);
+assert.ok(await page.locator('#verticalScroll').evaluate(el=>el.scrollTop>0 && el.scrollWidth<=el.clientWidth+1));
+await page.click('#atlasClose');await choose('chromatic');
+assert.equal(await page.locator('#names').inputValue(),'fingers');
+assert.equal(await page.locator('.fret.selected').textContent(),'1');
+await page.click('#step');assert.equal(await page.locator('.fret.selected').textContent(),'2');
+await page.selectOption('#names','off');assert.equal(await page.locator('.fret.selected').textContent(),'');
+await page.reload();assert.equal(await page.locator('#names').inputValue(),'off');
+await page.selectOption('#names','notes');await nav('Practice');
+console.log('PASS chord catalogue, enharmonic search, voicings, full-screen neck, scale roots, same-octave alternatives and saved finger labels.');
 assert.equal(await page.locator('#todayCount').innerText(),'0 of 11 done');
 await page.click('#nextExercise');
 assert.equal(new URL(page.url()).hash,'#exercise/chromatic');

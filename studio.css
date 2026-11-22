@@ -263,3 +263,33 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 .neck-navigation{display:flex;align-items:center;gap:12px;color:var(--muted);font:600 .78rem var(--mono)}
 .neck-navigation span{min-width:11ch;white-space:nowrap}
 .neck-navigation input[type=range],#labBody .neck-navigation input[type=range]{border:0;width:0;flex:1;min-width:0;height:44px;padding:0;margin:0;background:transparent;accent-color:var(--accent);cursor:pointer}
+
+@media(max-width:650px){.brandbar{flex-wrap:wrap}.brandbar nav{width:100%;justify-content:space-between;gap:2px}.brandbar nav a{min-width:0}}
+.library-controls,.root-strip,.chord-actions,.atlas-controls,#atlasChordControls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.library-controls{justify-content:space-between}.library-controls label{display:grid;gap:4px;font-weight:600}
+.library-controls input{padding:10px 12px;border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:8px;min-height:44px;max-width:100%}
+.root-strip{margin:14px 0}.root-strip button{min-width:44px;padding-inline:11px}
+#chordCount{margin-block:12px;color:var(--muted)}
+#chordCards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(215px,100%),1fr));gap:12px}
+.chord-card h2{font-size:1.6rem}.chord-card svg{display:block;margin:auto;width:160px;color:var(--txt);font:600 12px var(--mono);text-anchor:middle}
+.chord-card svg text:not([fill]){fill:currentColor}.chord-actions{justify-content:center;gap:5px}.chord-actions button{padding:6px 9px}
+#moreChords{margin:12px 0}.neck-panel [data-open-atlas]{margin:4px 0 10px}
+.atlas-open{overflow:hidden}
+#atlas{inset:0;width:100%;height:100%;height:100dvh;max-width:none;max-height:none;margin:0;border:0;border-radius:0;background:var(--bg);padding:max(8px,env(safe-area-inset-top)) 8px max(6px,env(safe-area-inset-bottom))}
+.atlas-inner{display:flex;flex-direction:column;height:100%;max-width:660px;margin:auto;min-height:0}
+.atlas-controls{gap:4px 10px;margin:6px 0}.atlas-controls label{display:flex;align-items:center;gap:4px;font-size:.8rem;color:var(--muted)}
+.atlas-controls select{padding:4px;min-height:44px;font-size:.94rem}#atlasCaption{font-size:.85rem;margin:2px 0 6px}
+.atlas-tuning,#verticalTrack{display:grid;grid-template-columns:26px repeat(6,minmax(0,1fr))}
+.atlas-tuning{background:#29251f;color:#f9edda;border-radius:8px 8px 0 0;text-align:center;line-height:27px;font-family:var(--mono)}
+#verticalScroll{overflow-y:auto;overscroll-behavior:contain;flex:1;min-height:80px;position:relative;scrollbar-width:none}
+#verticalScroll::-webkit-scrollbar{display:none}
+#verticalTrack{position:relative;isolation:isolate;container-type:inline-size}
+#verticalTrack::before{content:'';position:absolute;left:100%;top:0;width:1457px;height:calc(100cqw - 26px);transform-origin:0 0;transform:rotate(90deg);background:#543722 url('rosewood-neck.webp') center / 100% 100%;z-index:-1;pointer-events:none}
+.atlas-fret{background:#29251f;color:#f2e5cf;display:grid;place-items:center;font:600 .8rem var(--mono)}
+#atlas .atlas-cell{display:grid;place-items:center;min-width:0;min-height:44px;padding:0;border:0;border-radius:0;background:transparent;color:#1a241b}
+.atlas-cell span{min-width:23px;min-height:23px;display:grid;place-items:center;border-radius:50%;background:#cee6c9;font:700 .83rem var(--mono);box-shadow:0 1px 4px #2117}
+.atlas-cell[data-root=true] span{background:#ffd58b}.atlas-cell[data-picked=true] span{outline:2px solid white;outline-offset:2px}
+.atlas-cell[data-lit=no] span{visibility:hidden}
+@media(max-height:430px){.atlas-inner{overflow-y:auto}.atlas-inner>*{flex-shrink:0}#verticalScroll{min-height:100px}.atlas-controls{margin:0}}
+#verticalTrack{overflow:clip}#verticalScroll{overflow-x:hidden}
+.neck-head{flex-wrap:wrap}.neck-head label{max-width:100%}
