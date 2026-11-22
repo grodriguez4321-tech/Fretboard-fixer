@@ -61,10 +61,68 @@
     }
     return steps;
   }
+  function youtubeId(value){
+    try{
+      const url=new URL(value);
+      if(url.protocol!=='https:' || url.username || url.password || url.port)return null;
+      let key;
+      if(url.hostname==='youtu.be')key=url.pathname.slice(1);
+      else if(['youtube.com','www.youtube.com','m.youtube.com','music.youtube.com'].includes(url.hostname)){
+        key=url.pathname==='/watch'?url.searchParams.get('v'):url.pathname.match(/^\/(?:shorts|live|embed)\/([^/]+)\/?$/)?.[1];
+      }
+      return typeof key==='string' && /^[A-Za-z0-9_-]{11}$/.test(key)?key:null;
+    }catch{return null}
+  }
+  function videoExample(item){
+    const panel=element('details',null,'ug-video');
+    const summary=element('summary','Video example'),body=element('div');
+    panel.append(summary,body);
+    function render(editing=false){
+      body.replaceChildren();
+      if(!panel.open)return;
+      const saved=entries().find(entry=>id(entry)===id(item))?.videoId;
+      const video=typeof saved==='string' && /^[A-Za-z0-9_-]{11}$/.test(saved)?saved:null;
+      function update(key){
+        try{
+          persist(entries().map(entry=>id(entry)===id(item)?{...entry,videoId:key}:entry));
+          render();
+        }catch{status.textContent='Could not save the video change on this device.'}
+      }
+      if(video && !editing){
+        const player=element('iframe');
+        player.title=item.title+' • YouTube example';player.allowFullscreen=true;
+        player.allow='encrypted-media; picture-in-picture; fullscreen';
+        player.referrerPolicy='strict-origin-when-cross-origin';
+        player.src='https://www.youtube-nocookie.com/embed/'+video+'?playsinline=1';
+        const open=element('a','Watch on YouTube'),edit=element('button','Change video'),remove=element('button','Remove video');
+        open.href='https://www.youtube.com/watch?v='+video;open.target='_blank';open.rel='noopener';
+        edit.onclick=()=>render(true);remove.onclick=()=>update(null);
+        body.append(player,open,edit,remove);
+      }else{
+        const search=element('a','Find an example on YouTube');
+        search.href='https://www.youtube.com/results?search_query='+encodeURIComponent([item.title,item.artist,'guitar tutorial'].filter(Boolean).join(' '));
+        search.target='_blank';search.rel='noopener';
+        const form=element('form'),label=element('label','YouTube video link'),input=element('input'),submit=element('button','Save video');
+        input.type='url';input.required=true;input.placeholder='Paste a YouTube link';
+        if(video)input.value='https://www.youtube.com/watch?v='+video;
+        input.oninput=()=>input.setCustomValidity('');
+        form.onsubmit=e=>{
+          e.preventDefault();const key=youtubeId(input.value);
+          if(key)update(key);
+          else{input.setCustomValidity('Paste a link to one YouTube video.');input.reportValidity()}
+        };
+        label.append(input);form.append(label,submit);body.append(search,form);
+        if(video){const cancel=element('button','Cancel');cancel.onclick=()=>render();body.append(cancel)}
+      }
+    }
+    panel.ontoggle=()=>render();
+    return panel;
+  }
   function show(item,preview){
     reader.replaceChildren();const text=clean(item.content),title=element('h3',item.title);
     const source=element('a','Open source arrangement');source.href=sourceURL(item.url);source.target='_blank';source.rel='noopener noreferrer';
     reader.append(title,element('p',[item.artist,item.type,item.setup].filter(Boolean).join(' · '),'hint'),source);
+    if(!preview)reader.append(videoExample(item));
     const chords=[...new Set([...item.content.matchAll(/\[ch\]([^\[\]\n]{1,18})\[\/ch\]/gi)].map(m=>m[1].trim()))];
     if(!chords.length){
       const chord=/^[A-G][#b♯♭]?(?:(?:maj|min|dim|aug|sus|add|m|M|[0-9#b()+-])*)(?:\/[A-G][#b♯♭]?)?$/;
@@ -121,7 +179,7 @@
   $('ugSave').onclick=()=>{
     if(!draft)return;
     const item=draft,items=entries().slice(),at=items.findIndex(e=>id(e)===id(item));
-    if(at<0)items.push(item);else items[at]=item;
+    if(at<0)items.push(item);else items[at]={...items[at],...item};
     try{persist(items);showList();dialog.close();$('ugNotice').textContent=item.title+' saved to your repertoire.'}
     catch{status.textContent='Device storage is full. Your preview is still open.'}
   };
