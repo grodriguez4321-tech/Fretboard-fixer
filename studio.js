@@ -18,7 +18,7 @@ function element(tag, text, cls) {
   if (text != null) node.textContent = text;
   return node;
 }
-function makeSequence(bars, selection) {
+function makeSequence(bars, selection, playbackOrder) {
   let ordinal=0;
   const events=bars.flatMap((bar, b) => {
     let beat = 0;
@@ -33,6 +33,11 @@ function makeSequence(bars, selection) {
   if(join)return join.flatMap(index=>events.filter(e=>e.sourceIndex===index));
   const bounds=noteRange(selection);
   if(bounds)return events.filter(e=>e.sourceIndex>=bounds[0] && e.sourceIndex<=bounds[1]);
+  if(selection==='all' && playbackOrder){
+    const byBar=bars.map(()=>[]);
+    events.forEach(event=>byBar[event.bar].push(event));
+    return playbackOrder.flatMap((bar,visit)=>byBar[bar].map(event=>({...event,visit})));
+  }
   return events.filter(event=>selection==='all' || event.bar===Number(selection));
 }
 function nextIndex() {
@@ -60,9 +65,9 @@ function token(event, string) {
   const marker = {'Hammer-on':'h','Pull-off':'p','Slide':event.from < position.fret ? '/' : '∖'}[event.action] || '';
   return (event.continuation ? '~' : '') + marker + position.fret + (event.action === 'Half-step bend' ? 'b½' : '');
 }
-function buildStaff(bar) {
+function buildStaff(visit) {
   const staff = $('staff');
-  const events = sequence.filter(e => e.bar === bar);
+  const events = sequence.filter(e => (e.visit ?? e.bar) === visit);
   staff.style.setProperty('--columns',events.length);
   const labels = element('div', null, 'staff-labels');
   for (const string of stringSymbols) labels.append(element('span', string));
@@ -125,7 +130,8 @@ function beatReadout(beat){
 }
 function paint() {
   const event = sequence[cursor], next = nextIndex();
-  if (barShown !== event.bar) {buildStaff(event.bar);barShown=event.bar;}
+  const visit=event.visit ?? event.bar;
+  if (barShown !== visit) {buildStaff(visit);barShown=visit;}
   for (const col of $('staff').querySelectorAll('button')) {
     const i = Number(col.dataset.index);
     col.classList.toggle('current',i===cursor);
@@ -218,7 +224,7 @@ async function play() {
   }
   function pulse() {
     if(token!==generation)return;
-    const event=sequence[cursor], seconds=60/tempo();
+    const event=sequence[cursor], seconds=60/(tempo()*(event.tempoRatio||1));
     if(audible){
       if(elapsed===0 && $('guideTone').checked && (!event.continuation || freshAttack)){
         let beats=event.beats;
@@ -256,7 +262,7 @@ async function play() {
 }
 function rebuildPhrase() {
   haltPlayback();cursor=0;finished=false;barShown=-1;
-  sequence=makeSequence(score().bars,$('phrase').value);refreshRange();paint();showLog();
+  sequence=makeSequence(score().bars,$('phrase').value,score().playbackOrder);refreshRange();paint();showLog();
   document.dispatchEvent(new Event('practicephrasechange'));
 }
 function refreshRange(){
