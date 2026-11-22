@@ -34,17 +34,19 @@ const choose=async id=>{
 // A fresh course starts at Day 1, independently of older technique progress.
 await page.setViewportSize({width:390,height:844});
 await page.click('#zeroStart');
-assert.match(await page.locator('#zeroTitle').innerText(),/Hold, tune/);
+await page.getByRole('heading',{name:'Hold, tune, and make a sound'}).waitFor();
 await page.getByRole('button',{name:'E4',exact:true}).click();
 assert.match(await page.locator('#zeroBody').innerText(),/String 1 · E4/);
+await page.getByRole('button',{name:'Use microphone'}).click();
+await page.getByText(/Microphone unavailable/).waitFor();
 await page.getByLabel('Repeat this day next time').check();
 await page.locator('#zeroPage').getByRole('button',{name:'Done',exact:true}).click();
-await page.waitForURL('**/#practice');
+await page.waitForURL('**/#practice');await page.locator('#practicePage').waitFor();
 assert.equal(await page.locator('#zeroStart').getAttribute('href'),'#zero/1');
 await page.click('#zeroStart');await page.locator('#zeroPage').getByRole('button',{name:'Done',exact:true}).click();
-await page.waitForURL('**/#practice');assert.equal(await page.locator('#zeroStart').getAttribute('href'),'#zero/2');
+await page.waitForURL('**/#practice');await page.locator('#practicePage').waitFor();assert.equal(await page.locator('#zeroStart').getAttribute('href'),'#zero/2');
 await page.goto('http://127.0.0.1:'+server.address().port+'/#zero/9');
-assert.equal(await page.locator('#zeroPage figure').count(),2);
+await page.locator('#zeroPage figure').first().waitFor();assert.equal(await page.locator('#zeroPage figure').count(),2);
 assert.match(await page.locator('#zeroPage svg').first().getAttribute('aria-label'),/fret 2 finger 1, fret 2 finger 2/);
 await page.getByLabel('Time per chord').selectOption('8');
 await page.locator('.zero-tally button').nth(3).click();
@@ -52,13 +54,15 @@ await page.reload();assert.match(await page.locator('#zeroBody').innerText(),/3\
 await page.getByRole('button',{name:'Start pass'}).click();
 await page.waitForFunction(()=>document.querySelector('#zeroBody').textContent.includes('Count in ·'));
 await page.getByRole('button',{name:'Stop',exact:true}).click();
-assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+assert.deepEqual(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1?[]:[...document.querySelectorAll('#zeroPage *')].filter(el=>el.getBoundingClientRect().right>innerWidth+1 && !el.closest('.neck-scroll,.zero-score')).slice(0,12).map(el=>el.tagName+' '+el.className+' '+el.offsetWidth)),[]);
 for(let day=2;day<=28;day++){
  await page.evaluate(d=>{location.hash='zero/'+d},day);
  await page.waitForFunction(d=>document.querySelector('#zeroDay').textContent.endsWith('Day '+d+' of 28'),day);
  assert.ok((await page.locator('#zeroTitle').innerText()).length>0);
 }
 await nav('Practice');
+assert.ok(await page.locator('#generalExercises').isHidden());
+await page.click('#zeroGeneral');
 const {tabURL,parseTab}=await import('../netlify/functions/public-tab.mjs');
 const sampleUrl='https://tabs.ultimate-guitar.com/tab/example/original-chords-12345';
 assert.equal(tabURL(sampleUrl+'?share=1'),sampleUrl);

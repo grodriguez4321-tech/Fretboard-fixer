@@ -5,7 +5,7 @@
 <section id="practicePage" aria-labelledby="practiceTitle">
   <header class="lesson-head daily-hero">
     <div id="todayDate" class="category"></div><h1 id="practiceTitle" tabindex="-1">Today’s practice</h1>
-    <p>11 exercises · 25 minutes</p>
+    <p id="generalPracticeSummary">11 exercises · 25 minutes</p>
     <div class="riff-launch"><a id="nextExercise" class="start-link" href="#exercise/chromatic">Start practice</a><button id="quickStart">5-minute session</button></div>
   </header>
   <section class="zero-entry surface" aria-labelledby="zeroEntryTitle">
@@ -13,7 +13,8 @@
     <a class="start-link" id="zeroStart" href="#zero/1">Start Guitar from Zero</a>
     <details><summary>Browse course days</summary><div id="zeroContents"></div></details>
   </section>
-  <div class="checklist-heading"><h2>Exercise checklist</h2><div class="daily-count"><span id="todayCount"></span><progress id="todayProgress" max="11" value="0" aria-label="Today’s exercises completed"></progress></div></div>
+  <button id="zeroGeneral" class="zero-general" hidden aria-controls="generalExercises" aria-expanded="false">Show other practice exercises</button>
+  <div id="generalExercises"><div class="checklist-heading"><h2>Exercise checklist</h2><div class="daily-count"><span id="todayCount"></span><progress id="todayProgress" max="11" value="0" aria-label="Today’s exercises completed"></progress></div></div>
   <div class="checklist-feedback"><p role="status" id="finishNotice"></p><button id="undoDone" hidden>Undo</button></div>
   <div id="sections"></div>
   <aside id="reviewQueue" class="review-strip" hidden aria-label="Scheduled phrase review">
@@ -21,7 +22,7 @@
     <button id="startReview">Try from memory</button>
   </aside>
   <section id="savedRiffs" class="card" hidden><h2>My riffs</h2><div id="riffList"></div></section>
-</section>
+</div></section>
 <section class="zero-page" id="zeroPage" hidden aria-labelledby="zeroTitle">
   <a href="#practice" class="back-link">← Today’s practice</a>
   <header><p class="category" id="zeroDay"></p><h1 id="zeroTitle" tabindex="-1"></h1></header>

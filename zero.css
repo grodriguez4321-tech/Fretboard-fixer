@@ -22,3 +22,8 @@
 .zero-hand{width:100%;height:auto;aspect-ratio:1.9/1;object-fit:cover;object-position:left center;max-height:300px;border-radius:9px}
 .zero-hand.grip{object-position:right center}
 .zero-block audio{max-width:100%}
+.zero-hand{max-width:480px;aspect-ratio:1.5;max-height:none}
+.zero-bar td.sounding{background:var(--soft);color:var(--accent);font-weight:bold}
+.zero-general{margin:10px 0}
+.zero-block{grid-template-columns:minmax(0,1fr)}
+.zero-block>*{min-width:0}.zero-block input[type=number]{width:100%}

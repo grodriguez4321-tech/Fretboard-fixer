@@ -14,6 +14,13 @@ const zeroCourse=(()=>{
   }
   function home(){
     const course=store.zeroCourse,day=course?.next||1;
+    const enrolled=!!course?.enrolled,expanded=!!course?.showGeneral;
+    $('zeroGeneral').setAttribute('aria-expanded',String(expanded));
+    $('zeroGeneral').hidden=!enrolled;
+    $('generalExercises').hidden=enrolled && !expanded;
+    $('generalPracticeSummary').hidden=enrolled && !expanded;
+    $('nextExercise').parentElement.hidden=enrolled && !expanded;
+    $('zeroGeneral').textContent=expanded?'Hide other practice exercises':'Show other practice exercises';
     $('zeroToday').textContent='Day '+day+' · '+zeroLessons[day-1].title;
     $('zeroStart').textContent=course?.attempts.length?'Continue course':'Start Guitar from Zero';
     if(course?.attempts.length){
@@ -28,6 +35,9 @@ const zeroCourse=(()=>{
       list.append(link((practiced?'✓ ':'')+(i+1)+'. '+lesson.title,'#zero/'+(i+1)));
     }
   }
+  $('zeroGeneral').onclick=()=>{
+    state().showGeneral=!state().showGeneral;save();home();
+  };
   function tuning(day){
     const box=day===1?block('Tune one string at a time'):el('details',null,'surface zero-block');
     if(day!==1){box.append(el('summary','Tune before you play'));host.append(box)}
@@ -196,6 +206,10 @@ const zeroCourse=(()=>{
             position.textContent='Bar '+(ev.b+(p.first||1))+' · '+(ev.token==='-'?(day===9&&p.chords?'Move to the next shape':'Let it ring'):label(ev.token)+(p.chords?(division===2&&ev.j===7?' ↑':' ↓'):''));
             cue.textContent=next?'Next · '+label(next.token):'Count through the end';
             if(ev.token!=='-')setBoard(ev.token);
+            if(scoreBox.open && barCards[ev.b]){
+              const card=barCards[ev.b];scoreGrid.scrollLeft+=card.getBoundingClientRect().left-scoreGrid.getBoundingClientRect().left;
+              for(const tr of card.querySelectorAll('tr'))[...tr.cells].forEach((cell,i)=>cell.classList.toggle('sounding',i===ev.j+1));
+            }
             barCards.forEach((c,i)=>c.classList.toggle('current',i===ev.b));
           }
         }
@@ -278,6 +292,7 @@ const zeroCourse=(()=>{
   }
   function open(day){
     dispose();stopGuide=()=>{};
+    state().enrolled=true;save();
     const lesson=zeroLessons[day-1];host.replaceChildren();
     $('zeroDay').textContent='Guitar from Zero · Day '+day+' of 28';
     $('zeroTitle').textContent=lesson.title;
@@ -296,7 +311,9 @@ const zeroCourse=(()=>{
         el('p','Short on time? Tune, recall one skill, and do one pass. Pick “Repeat this day next time” to come back to it.'));
       host.append(plan);stopTuner=tuning(day);
       const guide=block('What to do');
-      for(const part of lesson.body.split(/\n\s*\n/))guide.append(el('p',part));
+      const instructions=lesson.body.replace('On page 2 find Em.', 'Open the Em fingering below.').replace('Use the G diagram on page 2.', 'Use the G diagram below.').replace('Use page 2.', 'Use the chord diagram below.').replace('Turn to the tab on page 11.', 'Open the notes and tab below.').replace(/ (?:from|on) page 11/g, '').replace('Close the guide.', 'Keep the notes and tab closed for the first attempt.');
+      for(const part of instructions.split(/\n\s*\n/))guide.append(el('p',part));
+      if(day===6)guide.append(el('p','Read across each row. The number is the fret. On beat 2 of bar 1, find the 2 on the G string and pick it once.'));
       if(day===9)guide.append(el('p','Keep your picking hand still on beats 2–4. Both downstrokes start from thick E. Listen for the click and the start of your strum together.'));
       charts(day);
     }
