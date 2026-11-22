@@ -65,6 +65,10 @@ const atlasCell=(s,f)=>page.locator('.atlas-cell[data-string="'+s+'"][data-fret=
 assert.equal(await atlasCell(1,5).getAttribute('data-root'),'true');
 assert.equal(await atlasCell(1,5).textContent(),'1');
 assert.equal(await atlasCell(1,6).getAttribute('data-lit'),'no');
+await page.selectOption('#atlasLabels','notes');
+await page.selectOption('#scaleRoot','5');await page.selectOption('#scaleType','Major');
+assert.equal(await atlasCell(5,1).textContent(),'B♭');
+await page.selectOption('#atlasLabels','fingers');
 await page.selectOption('#atlasMode','same');await atlasCell(2,10).click();
 assert.equal(await atlasCell(1,5).getAttribute('data-lit'),'yes');
 assert.equal(await atlasCell(6,5).getAttribute('data-lit'),'no');

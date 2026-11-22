@@ -6,6 +6,17 @@ const fretAtlas=(()=>{
     'Mixolydian':[0,2,4,5,7,9,10],'Harmonic minor':[0,2,3,5,7,8,11]
   };
   const cells=[],rootNames=['C','C♯ / D♭','D','E♭ / D♯','E','F','F♯ / G♭','G','A♭ / G♯','A','B♭ / A♯','B'];
+  // A scale degree keeps its letter name, so F major displays B♭ and C♯ major displays E♯.
+  const scaleDegrees={'Major pentatonic':[1,2,3,5,6],'Minor pentatonic':[1,3,4,5,7],'Blues':[1,3,4,5,5,7]};
+  function scaleSpelling(root,scale){
+    const letters='CDEFGAB',naturals=[0,2,4,5,7,9,11],start=letters.indexOf(rootNames[root][0]);
+    const degrees=scaleDegrees[scale]||[1,2,3,4,5,6,7];
+    return scales[scale].map((interval,i)=>{
+      const letter=(start+degrees[i]-1)%7;
+      const accidental=(root+interval-naturals[letter]+18)%12-6;
+      return letters[letter]+(accidental<0?'♭':'♯').repeat(Math.abs(accidental));
+    });
+  }
   let chosen=null,variation=0,picked={string:2,fret:10},activeKey;
   for(const [i,n] of rootNames.entries())$('scaleRoot').add(new Option(n,i));
   for(const name of Object.keys(scales))$('scaleType').add(new Option(name,name));
@@ -47,6 +58,7 @@ const fretAtlas=(()=>{
     $('rootField').hidden=$('scaleField').hidden=!scale;$('handField').hidden=!showHand;
     $('atlasChordControls').hidden=!chord;$('atlasVoicing').disabled=!chosen||chosen.shapes.length<2;
     const shape=chosen?.shapes[variation],root=Number($('scaleRoot').value),pattern=scales[$('scaleType').value];
+    const spellings=scale?scaleSpelling(root,$('scaleType').value):null;
     const target=tuning[picked.string-1]+picked.fret;
     for(const cell of cells){
       const s=Number(cell.dataset.string),f=Number(cell.dataset.fret),midi=tuning[s-1]+f,interval=(midi-root+120)%12;
@@ -56,7 +68,7 @@ const fretAtlas=(()=>{
       cell.dataset.picked=String(selected && (same || m==='notes'));
       const finger=chord?(f===0?'○':shape?.fingers[6-s]):fingerAt(f);
       const name=midiName(midi);
-      cell.firstChild.textContent=match?(labels.value==='notes'?pitches[midi%12]:labels.value==='fingers'?finger||'':''):'';
+      cell.firstChild.textContent=match?(labels.value==='notes'?(scale?spellings[pattern.indexOf(interval)]:pitches[midi%12]):labels.value==='fingers'?finger||'':''):'';
       cell.setAttribute('aria-label',stringNames[s-1]+' string fret '+f+', '+name+(match&&m!=='notes'?', in overlay':'')+(match&&labels.value==='fingers'&&finger?', '+(f===0?'open':'finger '+finger):''));
     }
     let caption=scale?rootNames[root]+' '+$('scaleType').value+' · Gold marks the root.':chord?
