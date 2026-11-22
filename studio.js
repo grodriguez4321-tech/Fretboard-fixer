@@ -99,20 +99,23 @@ function drawNeck(event) {
     if(p){lessonNeck.reveal(p.fret);lessonNeck.setTabStop(lessonNeck.cellAt(p.string,p.fret))}
     lastNeckEvent=event;
   }
+  $('fingerHint').hidden=$('names').value!=='fingers' || !event.positions.some(p=>p.fret>0 && !p.finger);
   for(const cell of lessonNeck.cells){
     const s = Number(cell.dataset.string), f = Number(cell.dataset.fret);
     const pos = event.positions.find(p=>p.string === s && p.fret === f);
-    cell.classList.toggle('blank',!pos && !$('names').checked);
+    const mode=$('names').value;
+    cell.classList.toggle('blank',!pos && mode!=='notes');
     const finger=pos ? String(pos.finger ?? 'unspecified') : '';
-    if(cell.dataset.finger===finger)continue;
+    if(cell.dataset.finger===finger && cell.dataset.mode===mode)continue;
+    cell.dataset.mode=mode;
     cell.dataset.finger=finger;
     cell.classList.toggle('selected',!!pos);
     cell.setAttribute('aria-pressed',String(!!pos));
     const marker=cell.firstChild;
-    marker.textContent=cell.dataset.pitch;
+    marker.textContent=mode==='notes'?cell.dataset.pitch:mode==='fingers' && pos?(f===0?'○':pos.finger || '·'):'';
     if(pos){
       cell.style.setProperty('--finger',colors[pos.finger || 0]);
-      if(pos.fret===0 || pos.finger)marker.append(element('sup',pos.fret===0 ? '°' : pos.finger));
+      if(mode==='notes' && (pos.fret===0 || pos.finger))marker.append(element('sup',pos.fret===0 ? '°' : pos.finger));
     }
   }
 }
@@ -389,7 +392,8 @@ $('play').onclick=play;
 $('step').onclick=()=>seek((cursor+1)%sequence.length,true);
 $('restart').onclick=()=>{const resume=playing;seek(0);if(resume)play()};
 $('loop').onclick=()=>{looping=!looping;$('loop').setAttribute('aria-pressed',String(looping));paint()};
-$('names').onchange=()=>drawNeck(sequence[cursor]);
+$('names').value=['fingers','off'].includes(store.neckLabels)?store.neckLabels:'notes';
+$('names').onchange=()=>{store.neckLabels=$('names').value;save();drawNeck(sequence[cursor])};
 $('slower').onclick=()=>setBpm(tempo()-5);$('faster').onclick=()=>setBpm(tempo()+5);
 $('saveBest').onclick=()=>{
   store.bests[bestKey()]=Math.max(Number(store.bests[bestKey()])||0,tempo());

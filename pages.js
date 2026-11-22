@@ -1,14 +1,14 @@
 // Hash routes keep each view bookmarkable on the static Netlify site.
 (() => {
-  const panels={practice:$('practicePage'),exercise:$('studio'),songs:$('songsPage'),tools:$('toolsPage'),journal:$('journal')};
-  const headings={practice:$('practiceTitle'),exercise:$('lessonTitle'),songs:$('songsTitle'),tools:$('toolsTitle'),journal:$('journalTitle')};
+  const panels={chords:$('chordsPage'),practice:$('practicePage'),exercise:$('studio'),songs:$('songsPage'),tools:$('toolsPage'),journal:$('journal')};
+  const headings={chords:$('chordsTitle'),practice:$('practiceTitle'),exercise:$('lessonTitle'),songs:$('songsTitle'),tools:$('toolsTitle'),journal:$('journalTitle')};
   let current='',applying=false,lastDay=dayKey(),feedback='',returnTo='',undo=null;
   function decodeRoute(){
     const hash=location.hash.slice(1);
     if(hash.startsWith('exercise/') && lessonById(hash.slice(9)))return hash;
     if(hash.startsWith('exercise/abc-'))return 'songs';
     if(hash==='studio')return 'exercise/'+active.id;
-    return hash==='tools'||hash==='songs'||hash==='journal' ? hash : 'practice';
+    return hash==='chords'||hash==='tools'||hash==='songs'||hash==='journal' ? hash : 'practice';
   }
   function display(route,focus){
     const page=route.split('/')[0];
@@ -25,6 +25,7 @@
     if(undo && page!==(songLessons.has(undo.id)?'songs':'practice'))undo=null;
     $('undoDone').hidden=!undo || page!=='practice';
     $('undoSong').hidden=!undo || page!=='songs';
+    if(page==='chords')chordLibrary.show();
     if(page==='songs'){render();if(feedback)$('abcStatus').textContent=feedback;feedback=''}
     if(page==='practice'){
       $('finishNotice').textContent=feedback;render();feedback='';
