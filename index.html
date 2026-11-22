@@ -75,6 +75,21 @@
 </section>
 <section id="songsPage" hidden aria-labelledby="songsTitle">
   <header class="lesson-head daily-hero"><div class="category">Song practice</div><h1 id="songsTitle" tabindex="-1">My song lessons</h1><p>Choose an excerpt to practice its notes one bar at a time.</p></header>
+  <section class="card repertoire" aria-labelledby="repertoireTitle">
+    <div class="score-head"><h2 id="repertoireTitle">My repertoire</h2><button id="ugAdd">Add tab link</button></div>
+    <div id="ugList"></div><p id="ugNotice" role="status"></p>
+  </section>
+  <dialog id="ugDialog" aria-labelledby="ugHeading">
+    <div class="score-head"><h2 id="ugHeading">Add an arrangement</h2><button id="ugClose">Close</button></div>
+    <form id="ugForm"><label>Public Ultimate Guitar link<input id="ugUrl" type="url" required placeholder="https://tabs.ultimate-guitar.com/tab/…"></label>
+    <small>Import a public arrangement you own or have permission to use. Saved songs stay on this device.</small>
+    <button class="primary">Preview arrangement</button></form>
+    <p id="ugStatus" role="status"></p>
+    <div id="ugManual" hidden><label>Arrangement title<input id="ugTitle" maxlength="180"></label>
+    <label>Your chord sheet or six-line tab<textarea id="ugText" maxlength="120000" rows="6"></textarea></label>
+    <button id="ugUseText">Preview pasted text</button></div>
+    <div id="ugRead"></div><button class="primary" id="ugSave" hidden>Save to repertoire</button>
+  </dialog>
   <button id="manageSongs" type="button" aria-pressed="false" aria-controls="songList" hidden>Manage songs</button>
   <div id="songList" class="card"></div>
   <input type="file" id="replacementAbc" accept=".abc,text/plain" hidden>
@@ -154,5 +169,6 @@
 <script src="practice-plans.js"></script>
 <script src="chord-library.js"></script>
 <script src="fretboard-explorer.js"></script>
+<script src="repertoire.js"></script>
 <script src="pages.js"></script>
 </body></html>

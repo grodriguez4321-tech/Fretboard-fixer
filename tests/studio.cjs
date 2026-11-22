@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','chord-library.js','fretboard-explorer.js','chord-shapes.json','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','repertoire.js','chord-library.js','fretboard-explorer.js','chord-shapes.json','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
@@ -31,6 +31,19 @@ const choose=async id=>{
   await page.locator('.exercise-row[data-lesson="'+id+'"]').click();
   await page.locator('#studio').waitFor();
 };
+const {tabURL,parseTab}=await import('../netlify/functions/public-tab.mjs');
+const sampleUrl='https://tabs.ultimate-guitar.com/tab/example/original-chords-12345';
+assert.equal(tabURL(sampleUrl+'?share=1'),sampleUrl);
+assert.equal(tabURL('https://example.com/tab/example/original-chords-12345'),null);
+const pageData={store:{page:{data:{tab:{id:12345,type:'Chords',song_name:'Original practice',artist_name:'Test'},
+ tab_view:{wiki_tab:{content:'[ch]Am[/ch]  [ch]C[/ch]'},meta:{capo:2}}}}}};
+const imported=parseTab('<div class="js-store" data-content="'+JSON.stringify(pageData).replace(/"/g,'&quot;')+'"></div>',sampleUrl);
+assert.equal(imported.setup,'Capo 2');
+await page.route('**/.netlify/functions/public-tab?*',route=>route.fulfill({json:imported}));
+await nav('Songs');await page.click('#ugAdd');await page.fill('#ugUrl',sampleUrl);await page.click('#ugForm button');await page.click('#ugSave');
+await page.reload();await page.getByRole('button',{name:/^Original practice/}).click();
+assert.ok(await page.locator('#ugRead').getByRole('button',{name:'Am',exact:true}).isVisible());
+await page.click('#ugClose');await nav('Practice');
 assert.ok(await page.locator('#practicePage').isVisible());
 assert.ok(await page.locator('#studio').isHidden());
 assert.equal(await page.locator('.exercise-row').count(),11);

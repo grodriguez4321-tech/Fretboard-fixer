@@ -293,3 +293,11 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 @media(max-height:430px){.atlas-inner{overflow-y:auto}.atlas-inner>*{flex-shrink:0}#verticalScroll{min-height:100px}.atlas-controls{margin:0}}
 #verticalTrack{overflow:clip}#verticalScroll{overflow-x:hidden}
 .neck-head{flex-wrap:wrap}.neck-head label{max-width:100%}
+
+.repertoire{margin-block:16px}.repertoire .score-head{flex-wrap:wrap}
+.ug-row{display:flex;align-items:center;gap:8px;padding-block:5px}
+.ug-row>button:first-child{flex:1;text-align:left}.ug-row small{display:block;font-weight:400}
+#ugDialog{min-width:0}#ugDialog form,#ugManual{display:grid;gap:8px}#ugDialog label{display:grid;gap:4px}
+#ugDialog input,#ugDialog textarea{min-width:0;width:100%;padding:10px;font:inherit}
+#ugRead{min-width:0}#ugRead p,#ugStatus{margin-block:8px}
+.ug-score{overflow:auto;max-height:50vh;line-height:1.6;background:var(--soft);padding:12px;border-radius:8px}
