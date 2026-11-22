@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','repertoire.js','chord-library.js','fretboard-explorer.js','chord-shapes.json','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['zero-hands.webp','zero.css','zero-lessons.js','zero-music.js','zero-course.js','index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','repertoire.js','chord-library.js','fretboard-explorer.js','chord-shapes.json','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
@@ -31,6 +31,34 @@ const choose=async id=>{
   await page.locator('.exercise-row[data-lesson="'+id+'"]').click();
   await page.locator('#studio').waitFor();
 };
+// A fresh course starts at Day 1, independently of older technique progress.
+await page.setViewportSize({width:390,height:844});
+await page.click('#zeroStart');
+assert.match(await page.locator('#zeroTitle').innerText(),/Hold, tune/);
+await page.getByRole('button',{name:'E4',exact:true}).click();
+assert.match(await page.locator('#zeroBody').innerText(),/String 1 · E4/);
+await page.getByLabel('Repeat this day next time').check();
+await page.locator('#zeroPage').getByRole('button',{name:'Done',exact:true}).click();
+await page.waitForURL('**/#practice');
+assert.equal(await page.locator('#zeroStart').getAttribute('href'),'#zero/1');
+await page.click('#zeroStart');await page.locator('#zeroPage').getByRole('button',{name:'Done',exact:true}).click();
+await page.waitForURL('**/#practice');assert.equal(await page.locator('#zeroStart').getAttribute('href'),'#zero/2');
+await page.goto('http://127.0.0.1:'+server.address().port+'/#zero/9');
+assert.equal(await page.locator('#zeroPage figure').count(),2);
+assert.match(await page.locator('#zeroPage svg').first().getAttribute('aria-label'),/fret 2 finger 1, fret 2 finger 2/);
+await page.getByLabel('Time per chord').selectOption('8');
+await page.locator('.zero-tally button').nth(3).click();
+await page.reload();assert.match(await page.locator('#zeroBody').innerText(),/3\/4 at 50 BPM \(8 beats/);
+await page.getByRole('button',{name:'Start pass'}).click();
+await page.waitForFunction(()=>document.querySelector('#zeroBody').textContent.includes('Count in ·'));
+await page.getByRole('button',{name:'Stop',exact:true}).click();
+assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+for(let day=2;day<=28;day++){
+ await page.evaluate(d=>{location.hash='zero/'+d},day);
+ await page.waitForFunction(d=>document.querySelector('#zeroDay').textContent.endsWith('Day '+d+' of 28'),day);
+ assert.ok((await page.locator('#zeroTitle').innerText()).length>0);
+}
+await nav('Practice');
 const {tabURL,parseTab}=await import('../netlify/functions/public-tab.mjs');
 const sampleUrl='https://tabs.ultimate-guitar.com/tab/example/original-chords-12345';
 assert.equal(tabURL(sampleUrl+'?share=1'),sampleUrl);

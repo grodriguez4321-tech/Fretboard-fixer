@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fretboard Fixer · Practice studio</title><meta name="theme-color" content="#143e35">
-<link rel="stylesheet" href="studio.css"></head><body><main>
+<link rel="stylesheet" href="studio.css"><link rel="stylesheet" href="zero.css"></head><body><main>
 <header class="brandbar"><a href="#practice" class="brand"><i aria-hidden="true"></i>Fretboard Fixer</a>
 <nav aria-label="Main navigation"><a href="#practice">Practice</a><a href="#songs">Songs</a><a href="#chords">Chords</a><a href="#tools">Tools</a><a href="#journal">Journal</a></nav></header>
 <section id="practicePage" aria-labelledby="practiceTitle">
@@ -8,6 +8,11 @@
     <p>11 exercises · 25 minutes</p>
     <div class="riff-launch"><a id="nextExercise" class="start-link" href="#exercise/chromatic">Start practice</a><button id="quickStart">5-minute session</button></div>
   </header>
+  <section class="zero-entry surface" aria-labelledby="zeroEntryTitle">
+    <div><span class="category">Beginner course · 28 sessions</span><h2 id="zeroEntryTitle">Guitar from Zero</h2><p id="zeroToday"></p></div>
+    <a class="start-link" id="zeroStart" href="#zero/1">Start Guitar from Zero</a>
+    <details><summary>Browse course days</summary><div id="zeroContents"></div></details>
+  </section>
   <div class="checklist-heading"><h2>Exercise checklist</h2><div class="daily-count"><span id="todayCount"></span><progress id="todayProgress" max="11" value="0" aria-label="Today’s exercises completed"></progress></div></div>
   <div class="checklist-feedback"><p role="status" id="finishNotice"></p><button id="undoDone" hidden>Undo</button></div>
   <div id="sections"></div>
@@ -16,6 +21,11 @@
     <button id="startReview">Try from memory</button>
   </aside>
   <section id="savedRiffs" class="card" hidden><h2>My riffs</h2><div id="riffList"></div></section>
+</section>
+<section class="zero-page" id="zeroPage" hidden aria-labelledby="zeroTitle">
+  <a href="#practice" class="back-link">← Today’s practice</a>
+  <header><p class="category" id="zeroDay"></p><h1 id="zeroTitle" tabindex="-1"></h1></header>
+  <div id="zeroBody"></div>
 </section>
 <section class="studio" id="studio" aria-labelledby="lessonTitle" hidden>
   <a id="backChecklist" class="back-link" href="#practice">← Today’s practice</a>
@@ -170,5 +180,8 @@
 <script src="chord-library.js"></script>
 <script src="fretboard-explorer.js"></script>
 <script src="repertoire.js"></script>
+<script src="zero-lessons.js"></script>
+<script src="zero-music.js"></script>
+<script src="zero-course.js"></script>
 <script src="pages.js"></script>
 </body></html>

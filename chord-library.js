@@ -92,5 +92,5 @@ const chordLibrary=(()=>{
     $('chordCount').textContent='Loading chords…';
     try{await load();render()}catch{$('chordCount').textContent='Could not load chord charts. ';const retry=element('button','Retry');retry.onclick=show;$('chordCount').append(retry)}
   }
-  return {load,show,symbol,pretty};
+  return {load,show,symbol,pretty,chart};
 })();
