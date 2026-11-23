@@ -7,6 +7,17 @@ const server=http.createServer((req,res)=>{
  if(!['theory/course.css','theory/course.js','theory/lessons.js','theory/From-Notes-to-Orchestration.pdf','theory/Leave-the-Light-On.mp3','theory/Leave-the-Light-On.mid','zero-hands.webp','zero.css','zero-lessons.js','zero-music.js','zero-course.js','index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','repertoire.js','chord-library.js','fretboard-explorer.js','chord-shapes.json','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
+ if(name.endsWith('.mp3')){
+   const size=fs.statSync(file).size,range=/^bytes=(\d+)-(\d*)$/.exec(req.headers.range||'');
+   res.setHeader('Accept-Ranges','bytes');res.setHeader('Content-Type','audio/mpeg');
+   if(range){
+     const start=Number(range[1]),end=range[2]?Math.min(size-1,Number(range[2])):size-1;
+     if(start>end){res.writeHead(416,{'Content-Range':'bytes */'+size}).end();return}
+     res.writeHead(206,{'Content-Range':'bytes '+start+'-'+end+'/'+size,'Content-Length':end-start+1});
+     fs.createReadStream(file,{start,end}).pipe(res);return;
+   }
+   res.setHeader('Content-Length',size);
+ }
  res.setHeader('Content-Type',file.endsWith('.mp3')?'audio/mpeg':file.endsWith('.mid')?'audio/midi':file.endsWith('.pdf')?'application/pdf':file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
 });
 await new Promise(r=>server.listen(0,'127.0.0.1',r));

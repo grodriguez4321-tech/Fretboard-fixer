@@ -11,10 +11,10 @@
 .theory-actions,.theory-pulses{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 #theoryBody button{min-height:42px}.theory-pulses{margin:.5rem 0}.theory-pulses span{border:1px solid var(--line);border-radius:6px;padding:6px 14px;font:600 1rem var(--mono)}
 .theory-pulses .current,.theory-keys button.on{background:var(--accent);color:var(--card)}
-.theory-keys{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));overflow-x:auto;padding-bottom:6px;gap:2px}
-.theory-keys button{min-width:0!important;padding:44px 0 7px;border-radius:0 0 6px 6px;font:600 .85rem var(--mono);color:#17382e;background:#fffdf2}
-.theory-keys button.accidental{background:#263c36;color:#f8f5e6;padding-top:16px;align-self:start}
-@media(max-width:520px){.theory-keys{grid-template-columns:repeat(12,43px)}}
+.theory-keys{position:relative;height:128px;margin:12px 0}
+.theory-keys button{position:absolute;left:calc(var(--key)*12.5%);width:12.5%;height:100%;min-width:0;padding:83px 0 5px;color:#17382e;background:#fffdf2;border:1px solid #78877d;border-radius:0 0 6px 6px;font:600 .85rem var(--mono)}
+.theory-keys button.accidental{left:calc((var(--key) - .29)*12.5%);z-index:1;width:7.25%;height:60%;background:#263c36;color:#f8f5e6;padding:32px 0 0;font-size:.67rem}
+.theory-keys button.on{background:var(--accent);color:var(--card)}
 .theory-field{display:grid;gap:3px;margin:10px 0;font-weight:600}
 #theoryBody textarea,#theoryBody input:not([type=checkbox]),#theoryBody select{font:inherit;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:9px;max-width:100%}
 #theoryBody textarea{width:100%;resize:vertical}

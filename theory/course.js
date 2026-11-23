@@ -109,7 +109,7 @@ const theoryCourse=(()=>{
     }
     function draw(){
       keys.replaceChildren();
-      for(let i=0;i<12;i++){
+      for(let i=0;i<=12;i++){
         const n=12*(Number(octave.input.value)+1)+i,b=button(midiName(n),()=>{
           if(latch.checked){
             selected.has(n)?selected.delete(n):selected.add(n);
@@ -118,7 +118,9 @@ const theoryCourse=(()=>{
           }else msg.textContent=midiName(n);
           hear([n]);
         });
-        b.classList.toggle('accidental',[1,3,6,8,10].includes(i));
+        const white=[0,2,4,5,7,9,11,12],black=[1,3,6,8,10].includes(i);
+        b.classList.toggle('accidental',black);
+        b.style.setProperty('--key',black?white.filter(step=>step<i).length:white.indexOf(i));
         if(latch.checked){b.classList.toggle('on',selected.has(n));b.setAttribute('aria-pressed',String(selected.has(n)))}
         keys.append(b);
       }
