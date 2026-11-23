@@ -54,11 +54,17 @@ await page.getByLabel('What I heard or changed').fill('Four evenly spaced claps.
 await page.reload();
 assert.equal(await page.getByLabel('What I heard or changed').inputValue(),'Four evenly spaced claps.');
 await page.locator('#theoryPage').getByText('My recordings',{exact:true}).click();
-await page.getByLabel('Attach a recording').setInputFiles({name:'Practice.wav',mimeType:'audio/wav',buffer:Buffer.from('RIFF')});
+await page.getByLabel('Attach a recording').setInputFiles({name:'Practice.wav',mimeType:'audio/wav',buffer:Buffer.from('UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQIAAAAAAA==','base64')});
+await page.waitForFunction(()=>document.querySelector('#theoryPage details a[download]')?.textContent.includes('take')||[...document.querySelectorAll('#theoryPage p')].some(p=>p.textContent.includes('Browser storage unavailable')));
+assert.equal(await page.getByText('Download this take',{exact:true}).count(),0,'Saving the recording to this browser failed');
 await page.getByRole('link',{name:'Download take'}).waitFor();
 await page.reload();await page.locator('#theoryPage').getByText('My recordings',{exact:true}).click();
 await page.getByRole('link',{name:'Download take'}).waitFor();
-assert.deepEqual(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1?[]:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1 && e.getBoundingClientRect().width).slice(0,16).map(e=>[e.tagName,e.className,e.id,e.offsetWidth,e.getBoundingClientRect().right])),[]);
+const theoryOverflow=await page.evaluate(()=>{
+  if(document.documentElement.scrollWidth<=innerWidth+1)return null;
+  return {width:innerWidth,actual:document.documentElement.scrollWidth,overflowing:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1 && e.getBoundingClientRect().width).slice(0,16).map(e=>[e.tagName,e.className,e.id,e.offsetWidth,e.getBoundingClientRect().right])};
+});
+assert.equal(theoryOverflow,null,JSON.stringify(theoryOverflow));
 await page.getByRole('button',{name:'Mark session done'}).click();
 await page.getByRole('link',{name:'Continue · Give silence a length'}).waitFor();
 assert.equal(await page.locator('.theory-week a').count(),60);

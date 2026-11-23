@@ -153,7 +153,8 @@ const theoryCourse=(()=>{
       if(displayed.has(take.id))return;
       displayed.add(take.id);
       const div=el('div'),title=el('h3',take.name),audio=el('audio');audio.controls=true;audio.preload='none';
-      const url=URL.createObjectURL(take.blob);urls.push(url);audio.src=url;audio.setAttribute('aria-label',take.name);
+      const blob=take.blob??new Blob([take.bytes],{type:take.mime});
+      const url=URL.createObjectURL(blob);urls.push(url);audio.src=url;audio.setAttribute('aria-label',take.name);
       const download=link('Download take',url);download.download=take.name;
       div.append(title,audio,actions(download,button('Remove take',async()=>{
         if(!confirm('Remove this saved recording?'))return;
@@ -166,8 +167,11 @@ const theoryCourse=(()=>{
       catch{loaded=false;info.textContent='Cannot open recording storage in this browser. Use a voice memo and note its filename below.'}
     });
     async function keep(blob,name){
-      const take={lesson:n,blob,name};
-      try{take.id=await takeStore('readwrite',s=>s.add(take));if(live){item(take);info.textContent='Take saved.'}}
+      try{
+        const take={lesson:n,name,mime:blob.type,bytes:await blob.arrayBuffer()};
+        take.id=await takeStore('readwrite',s=>s.add(take));
+        if(live){item(take);info.textContent='Take saved.'}
+      }
       catch{if(live){const url=URL.createObjectURL(blob);urls.push(url);const a=link('Download this take',url);a.download=name;info.replaceChildren('Browser storage unavailable. ',a)}}
     }
     function release(){stream?.getTracks().forEach(t=>t.stop());stream=null}
