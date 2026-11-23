@@ -20,3 +20,6 @@
 #theoryBody textarea{width:100%;resize:vertical}
 #theoryBody .start-link{display:inline-flex;text-decoration:none}.theory-meta{color:var(--muted);font-size:.9rem}
 @media(max-width:720px){.brandbar{flex-wrap:wrap}.brandbar nav{width:100%;justify-content:space-between;gap:3px}.brandbar nav a{min-width:0;font-size:clamp(.72rem,3vw,.87rem)}}
+.theory-field{grid-template-columns:minmax(0,1fr)}
+#theoryBody input[type=file],#theoryBody textarea,#theoryBody audio{min-width:0;width:100%;max-width:100%}
+#theoryBody h3,#theoryBody .theory-week a{overflow-wrap:anywhere}

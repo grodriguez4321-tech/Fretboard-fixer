@@ -58,7 +58,7 @@ await page.getByLabel('Attach a recording').setInputFiles({name:'Practice.wav',m
 await page.getByRole('link',{name:'Download take'}).waitFor();
 await page.reload();await page.locator('#theoryPage').getByText('My recordings',{exact:true}).click();
 await page.getByRole('link',{name:'Download take'}).waitFor();
-assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+assert.deepEqual(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1?[]:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1 && e.getBoundingClientRect().width).slice(0,16).map(e=>[e.tagName,e.className,e.id,e.offsetWidth,e.getBoundingClientRect().right])),[]);
 await page.getByRole('button',{name:'Mark session done'}).click();
 await page.getByRole('link',{name:'Continue · Give silence a length'}).waitFor();
 assert.equal(await page.locator('.theory-week a').count(),60);
