@@ -1,0 +1,25 @@
+#theoryPage{max-width:790px;margin:auto}
+.theory-heading{padding:18px 0 6px}.theory-heading .category{color:var(--muted)}.theory-heading h1{font:500 clamp(2rem,5.5vw,3.8rem)/1.05 var(--headline);margin:.1em 0 .25em}
+#theoryBody{display:grid;gap:15px;grid-template-columns:minmax(0,1fr);margin-bottom:26px}
+#theoryBody .surface{margin:0;padding:clamp(14px,3vw,24px);min-width:0}
+#theoryBody h2{margin:0 0 .45em}#theoryBody p{line-height:1.55;margin:.5em 0 .8em;max-width:70ch}
+#theoryBody summary{font-weight:700;cursor:pointer;padding:7px 0}#theoryBody .theory-next{border-left:4px solid var(--accent)}
+#theoryBody a:not(.start-link){color:var(--accent);text-underline-offset:3px}
+.theory-week+.theory-week{border-top:1px solid var(--line)}
+.theory-week a{display:block;padding:9px 4px;line-height:1.4}
+#theoryBody audio{width:100%;margin:.45rem 0}
+.theory-actions,.theory-pulses{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#theoryBody button{min-height:42px}.theory-pulses{margin:.5rem 0}.theory-pulses span{border:1px solid var(--line);border-radius:6px;padding:6px 14px;font:600 1rem var(--mono)}
+.theory-pulses .current,.theory-keys button.on{background:var(--accent);color:var(--card)}
+.theory-keys{position:relative;height:128px;margin:12px 0}
+.theory-keys button{position:absolute;left:calc(var(--key)*12.5%);width:12.5%;height:100%;min-width:0;padding:83px 0 5px;color:#17382e;background:#fffdf2;border:1px solid #78877d;border-radius:0 0 6px 6px;font:600 .85rem var(--mono)}
+.theory-keys button.accidental{left:calc((var(--key) - .29)*12.5%);z-index:1;width:7.25%;height:60%;background:#263c36;color:#f8f5e6;padding:32px 0 0;font-size:.67rem}
+.theory-keys button.on{background:var(--accent);color:var(--card)}
+.theory-field{display:grid;gap:3px;margin:10px 0;font-weight:600}
+#theoryBody textarea,#theoryBody input:not([type=checkbox]),#theoryBody select{font:inherit;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:9px;max-width:100%}
+#theoryBody textarea{width:100%;resize:vertical}
+#theoryBody .start-link{display:inline-flex;text-decoration:none}.theory-meta{color:var(--muted);font-size:.9rem}
+@media(max-width:720px){.brandbar{flex-wrap:wrap}.brandbar nav{width:100%;justify-content:space-between;gap:3px}.brandbar nav a{min-width:0;font-size:clamp(.72rem,3vw,.87rem)}}
+.theory-field{grid-template-columns:minmax(0,1fr)}
+#theoryBody input[type=file],#theoryBody textarea,#theoryBody audio{min-width:0;width:100%;max-width:100%}
+#theoryBody h3,#theoryBody .theory-week a{overflow-wrap:anywhere}

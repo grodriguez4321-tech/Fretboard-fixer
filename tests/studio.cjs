@@ -4,10 +4,21 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['zero-hands.webp','zero.css','zero-lessons.js','zero-music.js','zero-course.js','index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','repertoire.js','chord-library.js','fretboard-explorer.js','chord-shapes.json','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['theory/course.css','theory/course.js','theory/lessons.js','theory/From-Notes-to-Orchestration.pdf','theory/Leave-the-Light-On.mp3','theory/Leave-the-Light-On.mid','zero-hands.webp','zero.css','zero-lessons.js','zero-music.js','zero-course.js','index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','repertoire.js','chord-library.js','fretboard-explorer.js','chord-shapes.json','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
- res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
+ if(name.endsWith('.mp3')){
+   const size=fs.statSync(file).size,range=/^bytes=(\d+)-(\d*)$/.exec(req.headers.range||'');
+   res.setHeader('Accept-Ranges','bytes');res.setHeader('Content-Type','audio/mpeg');
+   if(range){
+     const start=Number(range[1]),end=range[2]?Math.min(size-1,Number(range[2])):size-1;
+     if(start>end){res.writeHead(416,{'Content-Range':'bytes */'+size}).end();return}
+     res.writeHead(206,{'Content-Range':'bytes '+start+'-'+end+'/'+size,'Content-Length':end-start+1});
+     fs.createReadStream(file,{start,end}).pipe(res);return;
+   }
+   res.setHeader('Content-Length',size);
+ }
+ res.setHeader('Content-Type',file.endsWith('.mp3')?'audio/mpeg':file.endsWith('.mid')?'audio/midi':file.endsWith('.pdf')?'application/pdf':file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.webp')?'image/webp':'text/html');fs.createReadStream(file).pipe(res);
 });
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 let browser;
@@ -31,6 +42,42 @@ const choose=async id=>{
   await page.locator('.exercise-row[data-lesson="'+id+'"]').click();
   await page.locator('#studio').waitFor();
 };
+// Theory has its own last session, notebook, recordings, and completion state.
+await page.setViewportSize({width:320,height:720});
+await page.getByRole('link',{name:'Music Theory',exact:true}).click();
+await page.getByRole('link',{name:'Start · Find beat one'}).click();
+await page.getByRole('heading',{name:'Find beat one',exact:true}).waitFor();
+await page.getByRole('button',{name:'Start click',exact:true}).click();
+await page.waitForFunction(()=>document.querySelector('.theory-pulses .current'));
+await page.getByRole('button',{name:'Stop click'}).click();
+await page.getByLabel('What I heard or changed').fill('Four evenly spaced claps.');
+await page.reload();
+assert.equal(await page.getByLabel('What I heard or changed').inputValue(),'Four evenly spaced claps.');
+await page.locator('#theoryPage').getByText('My recordings',{exact:true}).click();
+await page.getByLabel('Attach a recording').setInputFiles({name:'Practice.wav',mimeType:'audio/wav',buffer:Buffer.from('UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQIAAAAAAA==','base64')});
+await page.waitForFunction(()=>document.querySelector('#theoryPage details a[download]')?.textContent.includes('take')||[...document.querySelectorAll('#theoryPage p')].some(p=>p.textContent.includes('Browser storage unavailable')));
+assert.equal(await page.getByText('Download this take',{exact:true}).count(),0,'Saving the recording to this browser failed');
+await page.getByRole('link',{name:'Download take'}).waitFor();
+await page.reload();await page.locator('#theoryPage').getByText('My recordings',{exact:true}).click();
+await page.getByRole('link',{name:'Download take'}).waitFor();
+const theoryOverflow=await page.evaluate(()=>{
+  if(document.documentElement.scrollWidth<=innerWidth+1)return null;
+  return {width:innerWidth,actual:document.documentElement.scrollWidth,overflowing:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1 && e.getBoundingClientRect().width).slice(0,16).map(e=>[e.tagName,e.className,e.id,e.offsetWidth,e.getBoundingClientRect().right])};
+});
+assert.equal(theoryOverflow,null,JSON.stringify(theoryOverflow));
+await page.getByRole('button',{name:'Mark session done'}).click();
+await page.getByRole('link',{name:'Continue · Give silence a length'}).waitFor();
+assert.equal(await page.locator('.theory-week a').count(),60);
+await page.locator('.theory-week summary').nth(11).click();
+await page.getByRole('link',{name:'Day 5 · Run a final listening test'}).click();
+await page.getByRole('heading',{name:'Run a final listening test'}).waitFor();
+await page.getByText('Listening example and workbook',{exact:true}).click();
+await page.getByRole('button',{name:'0:52 · Ensemble'}).click();
+await page.waitForFunction(()=>document.querySelector('#theoryPage audio[aria-label^="Leave"]').currentTime>=51);
+await page.getByText('My song chart and final listen',{exact:true}).click();
+await page.getByLabel('Song title',{exact:true}).fill('New chorus');
+await page.getByLabel('Hook · can I sing it back?').selectOption('2');
+await nav('Practice');
 // A fresh course starts at Day 1, independently of older technique progress.
 await page.setViewportSize({width:390,height:844});
 await page.click('#zeroStart');
