@@ -146,8 +146,10 @@ const theoryCourse=(()=>{
     const panel=box('My recordings',true),list=el('div'),info=el('p','Record a take or attach an audio file. Saved takes stay in this browser.','hint');
     const input=el('input');input.type='file';input.accept='audio/*,.m4a,.wav,.mp3,.ogg,.webm';
     let live=true,stream,rec,requesting=false,loaded=false;
-    const urls=[];
+    const urls=[],displayed=new Set();
     function item(take){
+      if(displayed.has(take.id))return;
+      displayed.add(take.id);
       const div=el('div'),title=el('h3',take.name),audio=el('audio');audio.controls=true;audio.preload='none';
       const url=URL.createObjectURL(take.blob);urls.push(url);audio.src=url;audio.setAttribute('aria-label',take.name);
       const download=link('Download take',url);download.download=take.name;
