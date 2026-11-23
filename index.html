@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fretboard Fixer · Practice studio</title><meta name="theme-color" content="#143e35">
-<link rel="stylesheet" href="studio.css"><link rel="stylesheet" href="zero.css"></head><body><main>
+<link rel="stylesheet" href="studio.css"><link rel="stylesheet" href="zero.css"><link rel="stylesheet" href="theory/course.css"></head><body><main>
 <header class="brandbar"><a href="#practice" class="brand"><i aria-hidden="true"></i>Fretboard Fixer</a>
-<nav aria-label="Main navigation"><a href="#practice">Practice</a><a href="#songs">Songs</a><a href="#chords">Chords</a><a href="#tools">Tools</a><a href="#journal">Journal</a></nav></header>
+<nav aria-label="Main navigation"><a href="#practice">Practice</a><a href="#songs">Songs</a><a href="#chords">Chords</a><a href="#theory">Music Theory</a><a href="#tools">Tools</a><a href="#journal">Journal</a></nav></header>
 <section id="practicePage" aria-labelledby="practiceTitle">
   <header class="lesson-head daily-hero">
     <div id="todayDate" class="category"></div><h1 id="practiceTitle" tabindex="-1">Today’s practice</h1>
@@ -106,6 +106,7 @@
   <input type="file" id="replacementAbc" accept=".abc,text/plain" hidden>
   <label class="abc-import">Add ABC excerpts <input id="abcFiles" type="file" accept=".abc,text/plain" multiple></label><p class="hint" role="status" id="abcStatus"></p><button id="undoSong" hidden>Undo</button><button id="restoreSong" hidden>Undo removal</button>
 </section>
+<section id="theoryPage" aria-labelledby="theoryTitle" hidden><header class="theory-heading"><p id="theoryLocation" class="category"></p><h1 id="theoryTitle" tabindex="-1"></h1></header><div id="theoryBody"></div></section>
 <section id="chordsPage" hidden aria-labelledby="chordsTitle">
   <header class="page-heading"><h1 id="chordsTitle" tabindex="-1">Chord library</h1></header>
   <div class="library-controls"><label>Find a chord <input id="chordSearch" type="search" placeholder="Try Am, F♯m7 or C/G" autocomplete="off"></label><button type="button" data-open-atlas>Full-screen fretboard</button></div>
@@ -184,5 +185,7 @@
 <script src="zero-lessons.js"></script>
 <script src="zero-music.js"></script>
 <script src="zero-course.js"></script>
+<script src="theory/lessons.js"></script>
+<script src="theory/course.js"></script>
 <script src="pages.js"></script>
 </body></html>
