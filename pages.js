@@ -1,10 +1,11 @@
 // Hash routes keep each view bookmarkable on the static Netlify site.
 (() => {
-  const panels={theory:$('theoryPage'),zero:$('zeroPage'),chords:$('chordsPage'),practice:$('practicePage'),exercise:$('studio'),songs:$('songsPage'),tools:$('toolsPage'),journal:$('journal')};
-  const headings={theory:$('theoryTitle'),zero:$('zeroTitle'),chords:$('chordsTitle'),practice:$('practiceTitle'),exercise:$('lessonTitle'),songs:$('songsTitle'),tools:$('toolsTitle'),journal:$('journalTitle')};
+  const panels={finger:$('fingerPage'),theory:$('theoryPage'),zero:$('zeroPage'),chords:$('chordsPage'),practice:$('practicePage'),exercise:$('studio'),songs:$('songsPage'),tools:$('toolsPage'),journal:$('journal')};
+  const headings={finger:$('fingerTitle'),theory:$('theoryTitle'),zero:$('zeroTitle'),chords:$('chordsTitle'),practice:$('practiceTitle'),exercise:$('lessonTitle'),songs:$('songsTitle'),tools:$('toolsTitle'),journal:$('journalTitle')};
   let current='',applying=false,lastDay=dayKey(),feedback='',returnTo='',undo=null;
   function decodeRoute(){
     const hash=location.hash.slice(1);
+    if(/^finger(?:\/([1-9]|[12]\d|30)(?:\/[1-6])?)?$/.test(hash))return hash;
     if(hash==='theory' || /^theory\/([1-9]|[1-5][0-9]|60)$/.test(hash))return hash;
     if(/^zero\/([1-9]|1[0-9]|2[0-8])$/.test(hash))return hash;
     if(hash.startsWith('exercise/') && lessonById(hash.slice(9)))return hash;
@@ -15,6 +16,8 @@
   function display(route,focus){
     const page=route.split('/')[0];
     for(const [name,panel] of Object.entries(panels))panel.hidden=name!==page;
+    if(page==='finger')fingerCourse.open(...route.split('/').slice(1).map(Number));
+    if(page==='practice')fingerCourse.home();
     if(page==='theory')theoryCourse.open(Number(route.split('/')[1])||0);
     if(page==='zero')zeroCourse.open(Number(route.split('/')[1]));
     if(page==='practice')zeroCourse.home();
@@ -22,7 +25,7 @@
     $('backChecklist').href='#'+origin;
     $('backChecklist').textContent=origin==='songs'?'← My song lessons':'← Today’s practice';
     for(const a of document.querySelectorAll('.brandbar nav a')){
-      if(a.hash==='#'+(page==='exercise'?origin:page==='zero'?'practice':page))a.setAttribute('aria-current','page');
+      if(a.hash==='#'+(page==='exercise'?origin:(page==='zero'||page==='finger')?'practice':page))a.setAttribute('aria-current','page');
       else a.removeAttribute('aria-current');
     }
     current=route;

@@ -144,8 +144,8 @@ const theoryCourse=(()=>{
       tx.oncomplete=()=>resolve(req.result);tx.onabort=tx.onerror=()=>reject(tx.error);
     });
   }
-  function recorder(n){
-    const panel=box('My recordings',true),list=el('div'),info=el('p','Record a take or attach an audio file. Saved takes stay in this browser.','hint');
+  function recorder(n,panel=box('My recordings',true)){
+    const list=el('div'),info=el('p','Record a take or attach an audio file. Saved takes stay in this browser.','hint');
     const input=el('input');input.type='file';input.accept='audio/*,.m4a,.wav,.mp3,.ogg,.webm';
     let live=true,stream,rec,requesting=false,loaded=false;
     const urls=[],displayed=new Set();
@@ -254,5 +254,5 @@ const theoryCourse=(()=>{
       if(remember(status))location.hash='theory';else if(!previous)delete state().completed[n];
     });finish.className='primary';body.append(actions(finish,link('Return to outline','#theory')),status);
   }
-  return {open};
+  return {open,recorder};
 })();

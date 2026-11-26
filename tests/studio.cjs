@@ -4,7 +4,7 @@ const http=require('node:http'),fs=require('node:fs');
 (async()=>{
 const server=http.createServer((req,res)=>{
  const name=req.url==='/'?'index.html':req.url.slice(1);
- if(!['theory/course.css','theory/course.js','theory/lessons.js','theory/From-Notes-to-Orchestration.pdf','theory/Leave-the-Light-On.mp3','theory/Leave-the-Light-On.mid','zero-hands.webp','zero.css','zero-lessons.js','zero-music.js','zero-course.js','index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','repertoire.js','chord-library.js','fretboard-explorer.js','chord-shapes.json','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
+ if(!['finger-course.js','finger-days.js','finger-patterns.js','finger.css','theory/course.css','theory/course.js','theory/lessons.js','theory/From-Notes-to-Orchestration.pdf','theory/Leave-the-Light-On.mp3','theory/Leave-the-Light-On.mid','zero-hands.webp','zero.css','zero-lessons.js','zero-music.js','zero-course.js','index.html','routine.js','scores.js','studio.js','coach.js','riff-data.js','riff-editor.js','tool-visuals.js','note-picker.js','guitar-neck.js','rosewood-neck.webp','learning-tools.js','pitch-tools.js','music-drills.js','practice-plans.js','studio.css','pages.js','abc-lessons.js','repertoire.js','chord-library.js','fretboard-explorer.js','chord-shapes.json','acoustic-cover.webp'].includes(name)){res.writeHead(404).end();return}
  const file=path.join(__dirname,'..',name);
  if(!fs.existsSync(file)){res.writeHead(404).end();return}
  if(name.endsWith('.mp3')){
@@ -42,6 +42,33 @@ const choose=async id=>{
   await page.locator('.exercise-row[data-lesson="'+id+'"]').click();
   await page.locator('#studio').waitFor();
 };
+// Fingerstyle routes preserve the daily checklist and a scored fretboard attempt.
+await page.setViewportSize({width:320,height:720});
+await page.locator('#fingerStart').click();
+await page.getByLabel('Session length').selectOption('40');
+await page.getByRole('link',{name:'Picking-hand accuracy · 7 min'}).click();
+await page.locator('#fingerBody').getByRole('button',{name:'Play',exact:true}).click();
+await page.waitForFunction(()=>document.querySelector('#fingerBody .fs-col[aria-current]')?.getAttribute('aria-label')?.startsWith('Step 2,'));
+await page.locator('#fingerBody').getByRole('button',{name:'Pause',exact:true}).click();
+assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+await page.getByRole('button',{name:'Done · back to checklist'}).click();
+await page.getByRole('link',{name:'✓ Picking-hand accuracy · 7 min'}).waitFor();
+await page.reload();await page.getByRole('link',{name:'✓ Picking-hand accuracy · 7 min'}).waitFor();
+const root='http://127.0.0.1:'+server.address().port+'/';
+await page.goto(root+'#finger/18/4');
+assert.equal(await page.getByLabel('Pattern',{exact:true}).locator('option:checked').innerText(),'Thumb level 3');
+await page.getByLabel('Pattern',{exact:true}).selectOption('1');
+assert.equal(await page.locator('#fingerBody .neck-cell.selected').count(),2);
+await page.goto(root+'#finger/30/5');
+for(let i=0;i<20;i++){
+  const target=await page.evaluate(()=>store.fingerRoadmap.days[30].quiz.targets[store.fingerRoadmap.days[30].quiz.at]);
+  await page.locator('#fingerBody .neck-cell[data-string="'+target.string+'"][data-fret="'+target.fret+'"]').click();
+}
+await page.getByText('20 / 20 correct (100%). Range complete.').waitFor();
+await page.getByRole('button',{name:'Try frets 1–8'}).click();
+assert.equal(await page.evaluate(()=>store.fingerRoadmap.days[30].quiz.limit),8);
+await page.goto(root+'#finger');
+assert.equal(await page.locator('#fingerBody .fs-item').count(),30);
 // Theory has its own last session, notebook, recordings, and completion state.
 await page.setViewportSize({width:320,height:720});
 await page.getByRole('link',{name:'Music Theory',exact:true}).click();
