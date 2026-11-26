@@ -59,6 +59,9 @@ await page.goto(root+'#finger/18/4');
 assert.equal(await page.getByLabel('Pattern',{exact:true}).locator('option:checked').innerText(),'Thumb level 3');
 await page.getByLabel('Pattern',{exact:true}).selectOption('1');
 assert.equal(await page.locator('#fingerBody .neck-cell.selected').count(),2);
+await page.goto(root+'#finger/6/4');
+await page.getByRole('button',{name:'Step 2, thin e 0',exact:true}).click();
+assert.ok(await page.locator('#fingerBody .fs-held .note-cap').isVisible());
 await page.goto(root+'#finger/30/5');
 await page.getByRole('heading',{name:'Find 20 positions'}).waitFor();
 for(let i=0;i<20;i++){
