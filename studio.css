@@ -306,7 +306,7 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 
 #staff.song-staff{display:block;position:relative;min-width:0;max-height:clamp(260px,48vh,550px);overflow:auto;overscroll-behavior:contain}
 .song-tab-row{display:grid;grid-template-columns:18px;grid-auto-columns:minmax(22px,1fr);grid-template-rows:auto auto;grid-auto-flow:column;align-items:end}
-.song-beat-title{grid-column:1/-1;grid-row:1;font:600 .75rem var(--mono);white-space:nowrap;margin:3px 0 5px;color:#c9d7c6}
+.song-bar-title{grid-column:1/-1;grid-row:1;font:600 .75rem var(--mono);white-space:nowrap;margin:3px 0 5px;color:#c9d7c6}
 .song-tab-row>.tabcol,.song-tab-row>.staff-labels{grid-row:2;grid-template-rows:repeat(6,13px) 16px}
 .song-tab-row .tabcol{min-width:0;font-size:.85rem}
 .song-tab-row :is(.staff-labels,.tabcol) span{height:13px;line-height:13px}

@@ -65,7 +65,7 @@ function token(event, string) {
   const marker = {'Hammer-on':'h','Pull-off':'p','Slide':event.from < position.fret ? '/' : '∖'}[event.action] || '';
   return (event.continuation ? '~' : '') + marker + position.fret + (event.action === 'Half-step bend' ? 'b½' : '');
 }
-let songCells = [], highlighted = [], visibleBeatRow;
+let songCells = [], highlighted = [], visibleBarRow;
 function staffLabels() {
   const labels = element('div', null, 'staff-labels');
   for (const string of stringSymbols) labels.append(element('span', string));
@@ -91,31 +91,31 @@ function buildStaff(visit, song) {
   const staff = $('staff');
   staff.classList.toggle('song-staff',song);
   staff.replaceChildren();
-  songCells=[];highlighted=[];visibleBeatRow=null;
+  songCells=[];highlighted=[];visibleBarRow=null;
   if (!song) {
     const indices = [];
     sequence.forEach((e,i)=>{if ((e.visit ?? e.bar) === visit) indices.push(i)});
     staff.style.setProperty('--columns',indices.length);
-    staff.append(staffLabels(),...indices.map(tabColumn));
+    staff.append(staffLabels(),...indices.map(index=>tabColumn(index)));
     return;
   }
   const rows=document.createDocumentFragment();
-  let row, previousBeat, previousVisit;
+  let row, previousVisit;
   sequence.forEach((event,index)=>{
     const visit=event.visit ?? event.bar;
     const first=Math.floor(event.beat+1e-8), end=Math.ceil(event.beat+event.beats-1e-8);
     songCells[index]=[];
+    if(visit!==previousVisit || !row){
+      row=element('div',null,'song-tab-row');
+      row.append(element('strong','Bar '+(event.bar+1),'song-bar-title'),staffLabels());
+      rows.append(row);
+      previousVisit=visit;
+    }
     for(let beat=first;beat<end;beat++){
-      if(visit!==previousVisit || beat!==previousBeat || !row){
-        row=element('div',null,'song-tab-row');
-        row.append(element('strong','Bar '+(event.bar+1)+' · Beat '+(beat+1),'song-beat-title'),staffLabels());
-        rows.append(row);
-      }
       const col=tabColumn(index,beat>first);
       col.dataset.beat=beat;
       col.setAttribute('aria-label','Bar '+(event.bar+1)+', beat '+(beat+1)+', '+(beat>first?'continued ':'')+describe(event)[0]);
       row.append(col);songCells[index].push(col);
-      previousVisit=visit;previousBeat=beat;
     }
   });
   staff.append(rows);
@@ -130,10 +130,13 @@ function paintSongBeat(beat,next){
   highlighted=[current];
   if(upcoming && upcoming!==current){upcoming.classList.add('next');highlighted.push(upcoming)}
   const row=current.parentElement, staff=$('staff');
-  if(visibleBeatRow!==row){
+  const left=current.offsetLeft, right=left+current.offsetWidth;
+  if(left<staff.scrollLeft)staff.scrollLeft=left;
+  else if(right>staff.scrollLeft+staff.clientWidth)staff.scrollLeft=right-staff.clientWidth;
+  if(visibleBarRow!==row){
     const top=row.offsetTop, bottom=top+row.offsetHeight;
     if(top<staff.scrollTop || bottom>staff.scrollTop+staff.clientHeight)staff.scrollTop=top;
-    visibleBeatRow=row;
+    visibleBarRow=row;
   }
 }
 function drawNeck(event) {
