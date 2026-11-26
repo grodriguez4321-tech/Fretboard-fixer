@@ -541,6 +541,7 @@ await reader.goto(page.url().split('#')[0]+'#songs');
 const longSong='X:1\nT:Page turn\nM:4/4\nL:1/4\nQ:1/4=120\nK:none\n'+Array(10).fill('C2 z2').join(' | ')+' |]';
 await reader.locator('#abcFiles').setInputFiles({name:'reader.abc',mimeType:'text/plain',buffer:Buffer.from(longSong)});
 await reader.locator('#songList a').click();
+await reader.locator('#staff.song-staff').waitFor();
 assert.equal(await reader.locator('#staff .tabcol').count(),16);
 assert.ok(await reader.locator('.staff-scroll').evaluate(el=>el.scrollWidth<=el.clientWidth+1));
 await reader.locator('.tab-navigation button').last().click();
