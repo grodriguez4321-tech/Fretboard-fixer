@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fretboard Fixer · Practice studio</title><meta name="theme-color" content="#143e35">
-<link rel="stylesheet" href="studio.css"><link rel="stylesheet" href="zero.css"><link rel="stylesheet" href="theory/course.css"></head><body><main>
+<link rel="stylesheet" href="studio.css"><link rel="stylesheet" href="zero.css"><link rel="stylesheet" href="theory/course.css"><link rel="stylesheet" href="finger.css"></head><body><main>
 <header class="brandbar"><a href="#practice" class="brand"><i aria-hidden="true"></i>Fretboard Fixer</a>
 <nav aria-label="Main navigation"><a href="#practice">Practice</a><a href="#songs">Songs</a><a href="#chords">Chords</a><a href="#theory">Music Theory</a><a href="#tools">Tools</a><a href="#journal">Journal</a></nav></header>
 <section id="practicePage" aria-labelledby="practiceTitle">
@@ -8,6 +8,7 @@
     <p id="generalPracticeSummary">11 exercises · 25 minutes</p>
     <div class="riff-launch"><a id="nextExercise" class="start-link" href="#exercise/chromatic">Start practice</a><button id="quickStart">5-minute session</button></div>
   </header>
+  <section class="zero-entry surface"><div><span class="category">Fingerstyle · 30 days</span><h2>Melodic fingerstyle</h2><p id="fingerToday"></p></div><a class="start-link" id="fingerStart" href="#finger/1">Open day 1</a> <a href="#finger">Browse roadmap</a></section>
   <section class="zero-entry surface" aria-labelledby="zeroEntryTitle">
     <div><span class="category">Beginner course · 28 sessions</span><h2 id="zeroEntryTitle">Guitar from Zero</h2><p id="zeroToday"></p></div>
     <a class="start-link" id="zeroStart" href="#zero/1">Start Guitar from Zero</a>
@@ -23,6 +24,7 @@
   </aside>
   <section id="savedRiffs" class="card" hidden><h2>My riffs</h2><div id="riffList"></div></section>
 </div></section>
+<section id="fingerPage" class="zero-page" hidden aria-labelledby="fingerTitle"><a class="back-link" href="#practice">← Today’s practice</a><p class="category" id="fingerKicker"></p><h1 tabindex="-1" id="fingerTitle"></h1><div id="fingerBody"></div></section>
 <section class="zero-page" id="zeroPage" hidden aria-labelledby="zeroTitle">
   <a href="#practice" class="back-link">← Today’s practice</a>
   <header><p class="category" id="zeroDay"></p><h1 id="zeroTitle" tabindex="-1"></h1></header>
@@ -187,5 +189,6 @@
 <script src="zero-course.js"></script>
 <script src="theory/lessons.js"></script>
 <script src="theory/course.js"></script>
+<script src="finger-days.js"></script><script src="finger-patterns.js"></script><script src="finger-course.js"></script>
 <script src="pages.js"></script>
 </body></html>
