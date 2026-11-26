@@ -71,6 +71,17 @@ assert.equal(await page.evaluate(()=>store.fingerRoadmap.days[30].quiz.limit),8)
 await page.goto(root+'#finger');
 await page.getByRole('heading',{name:'Your next session'}).waitFor();
 assert.equal(await page.locator('#fingerBody .fs-item').count(),30);
+// Render every daily block at phone width, including the song recording controls.
+await page.evaluate(()=>{
+  for(let day=1;day<=30;day++){
+    for(let block=1;block<=6;block++){
+      fingerCourse.open(day,block);
+      if(!document.querySelector('#fingerBody .primary') || document.documentElement.scrollWidth>innerWidth+1)
+        throw Error('Fingerstyle layout failed on day '+day+', block '+block);
+    }
+  }
+  document.dispatchEvent(new Event('leavepracticepage'));
+});
 // Theory has its own last session, notebook, recordings, and completion state.
 await page.setViewportSize({width:320,height:720});
 await page.getByRole('link',{name:'Music Theory',exact:true}).click();

@@ -60,17 +60,17 @@ const fingerCourse=(()=>{
       if(d===24)return ['Quiet','Moderate','Loud'].map((name,i)=>({name:name+' phrase',cue:'Play the same four notes at each volume. Keep the tempo steady and the attacks clear. Record two versions and compare.',division:1,bpm:50,steps:[0,1,3,1].map(f=>[{string:1,fret:f,duration:.9,volume:[.05,.12,.22][i]}])}));
       if(d===2)return [P.picking(false,true),P.picking()];
       if(d===10)return [P.picking(),P.picking(true)];
-      if([3,4,12,24,25].includes(d))return [ ...(d===12||d===24?[P.balance]:d===25?[P.mute]:[]),P.pinch(2),P.pinch(3),P.pinch(4)];
+      if([3,4,12,25].includes(d))return [ ...(d===12?[P.balance]:d===25?[P.mute]:[]),P.pinch(2),P.pinch(3),P.pinch(4)];
       if([8,9].includes(d))return d===8?Object.keys(P.shapes).map(P.chord):[P.changes('D'),P.changes('E')];
+      if(d===16)return [{name:'Melody alone',cue:'Keep the thumb resting. Pick thin e with the ring finger. Sing the four notes back, then isolate the top voice in your own arrangement.',division:1,bpm:45,steps:[0,3,0,3].map(f=>[{string:1,fret:f,duration:.9}])}];
       if(d>=15&&d<=18)return [P.thumb(d===15?1:d===17?2:3),P.picking()];
-      return [P.picking(false,d===2),P.picking(true)];
+      return [P.picking(),P.picking(true)];
     }
     if(b===3){
       if(d===19)return [P.legato('hammer')];
       if(d===20)return [P.legato('pull'),P.legato('slide')];
-      if(d===22)return [{name:'Natural harmonics',cue:'Touch thick E directly above wire 12, 7 or 5. Pluck with the thumb and lift the touching finger immediately. Listen for a clear bell-like pitch.',division:1,bpm:45,steps:[12,7,5].map((f,i)=>[{string:6,fret:f,ratio:[2,3,4][i],duration:.95}])}];
-      if(d===19||d===20)return d===19?[P.legato('hammer')]:[P.legato('pull'),P.legato('slide')];
-      if(d===22)return [P.harmonic];if(d===23)return [P.shift];if(d===11)return [P.jumps];
+      if(d===22)return [P.harmonic];
+      if(d===23)return [P.shift];if(d===11)return [P.jumps];
       if(d===8)return Object.keys(P.shapes).map(P.chord);
       if(d===9)return [P.changes('D'),P.changes('E')];
       return ['1234','4321','1324','1423','2413'].map(o=>P.spider(o));
@@ -124,8 +124,15 @@ const fingerCourse=(()=>{
           if(audible){
             if(i%pattern.division===0)voice(920,.035,t,.055,null,'sine');
             for(const n of pattern.steps[i]){
+              const nextNote=pattern.steps[i+1]?.find(v=>v.string===n.string);
+              if(nextNote?.gesture==='Slide'){
+                voice(pitchAt(n.string,n.fret).hz,2*interval,t,.13,pitchAt(n.string,nextNote.fret).hz);
+                continue;
+              }
+              if(n.gesture==='Slide' && ticks>0)continue;
               const hz=n.ratio?pitchAt(n.string,0).hz*n.ratio:pitchAt(n.string,n.fret).hz;
-              voice(hz,n.duration*seconds,t,n.volume||.13,null,n.ratio?'sine':'triangle');
+              const legato=n.gesture==='Hammer-on'||n.gesture==='Pull-off';
+              voice(hz,n.duration*seconds,t,n.volume??(legato ? .09 : .13),null,n.ratio?'sine':'triangle');
             }
           }
           ticks++;if(!loop && i===pattern.steps.length-1)limit=ticks;
