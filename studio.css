@@ -304,14 +304,11 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 
 .ug-video{margin:1rem 0;border-block:1px solid var(--line,#526258);padding:.6rem 0}.ug-video summary{cursor:pointer;padding:.5rem;font-weight:700}.ug-video>div{display:flex;flex-wrap:wrap;gap:.65rem;align-items:center}.ug-video iframe{display:block;width:100%;height:auto;aspect-ratio:16/9;min-height:200px;border:0;border-radius:8px;background:#111}.ug-video form{width:100%}
 
-#staff.song-staff{display:block;min-width:0}
-.song-tab-row{display:grid;grid-template-columns:18px repeat(8,minmax(0,1fr));padding-top:18px}
-.song-tab-row+.song-tab-row{margin-top:7px;border-top:1px solid #41594e}
-.song-tab-row .tabcol{position:relative;min-width:0}
-.song-tab-row .tabcol i{padding:0 1px}
-.song-tab-row .measure-start{border-left-color:#6e8777}
-.song-tab-row .measure-start::before{content:attr(data-measure);position:absolute;left:2px;top:-17px;font:600 .7rem var(--mono);color:#c8d7c8}
-.song-tab-row .tabcol.current{border-color:#b4deb2}
-.tab-navigation{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #41594e;padding-top:6px;margin-top:6px}
-.tab-navigation span{font:.8rem var(--mono)}
-.tab-navigation button{min-height:40px}
+#staff.song-staff{display:block;position:relative;min-width:0;max-height:clamp(260px,48vh,550px);overflow:auto;overscroll-behavior:contain}
+.song-tab-row{display:grid;grid-template-columns:18px;grid-auto-columns:minmax(22px,1fr);grid-template-rows:auto auto;grid-auto-flow:column;align-items:end}
+.song-beat-title{grid-column:1/-1;grid-row:1;font:600 .75rem var(--mono);white-space:nowrap;margin:3px 0 5px;color:#c9d7c6}
+.song-tab-row>.tabcol,.song-tab-row>.staff-labels{grid-row:2;grid-template-rows:repeat(6,13px) 16px}
+.song-tab-row .tabcol{min-width:0;font-size:.85rem}
+.song-tab-row :is(.staff-labels,.tabcol) span{height:13px;line-height:13px}
+.song-tab-row .tabcol i{padding:0 2px}
+.song-tab-row+.song-tab-row{margin-top:5px;padding-top:4px;border-top:1px solid #41594e}

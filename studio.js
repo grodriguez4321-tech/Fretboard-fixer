@@ -65,14 +65,13 @@ function token(event, string) {
   const marker = {'Hammer-on':'h','Pull-off':'p','Slide':event.from < position.fret ? '/' : '∖'}[event.action] || '';
   return (event.continuation ? '~' : '') + marker + position.fret + (event.action === 'Half-step bend' ? 'b½' : '');
 }
-const songRowSize = 8;
-const songPageSize = songRowSize * 2;
+let songCells = [], highlighted = [], visibleBeatRow;
 function staffLabels() {
   const labels = element('div', null, 'staff-labels');
   for (const string of stringSymbols) labels.append(element('span', string));
   return labels;
 }
-function tabColumn(index) {
+function tabColumn(index, sustain=false) {
   const event = sequence[index];
   const button = element('button', null, 'tabcol');
   button.dataset.index = index;
@@ -80,10 +79,11 @@ function tabColumn(index) {
   for (let s=1;s<=6;s++) {
     const line = element('span');
     const mark = token(event,s);
+    if(sustain && mark){line.append(element('i','~'));button.append(line);continue}
     if (mark) line.append(element('i',mark));
     button.append(line);
   }
-  button.append(element('small',event.action === 'Rest' ? 'rest' : Number.isInteger(event.beat) ? event.beat+1 : '&'));
+  button.append(element('small',sustain ? (event.action==='Rest'?'rest':'hold') : event.action === 'Rest' ? 'rest' : Number.isInteger(event.beat) ? event.beat+1 : '&'));
   button.onclick = () => seek(index, true);
   return button;
 }
@@ -91,6 +91,7 @@ function buildStaff(visit, song) {
   const staff = $('staff');
   staff.classList.toggle('song-staff',song);
   staff.replaceChildren();
+  songCells=[];highlighted=[];visibleBeatRow=null;
   if (!song) {
     const indices = [];
     sequence.forEach((e,i)=>{if ((e.visit ?? e.bar) === visit) indices.push(i)});
@@ -98,31 +99,41 @@ function buildStaff(visit, song) {
     staff.append(staffLabels(),...indices.map(tabColumn));
     return;
   }
-  const start = visit * songPageSize;
-  const end = Math.min(start + songPageSize,sequence.length);
-  for (let first = start; first < end; first += songRowSize) {
-    const row = element('div',null,'song-tab-row');
-    row.append(staffLabels());
-    for (let i = first; i < Math.min(first + songRowSize,end); i++) {
-      const col = tabColumn(i), event = sequence[i], prev = sequence[i-1];
-      if (i === first || event.bar !== prev.bar || event.visit !== prev.visit || event.beat === 0) {
-        col.classList.add('measure-start');
-        col.dataset.measure = event.bar + 1;
-        col.setAttribute('aria-label','Bar '+(event.bar+1)+', '+col.getAttribute('aria-label'));
+  const rows=document.createDocumentFragment();
+  let row, previousBeat, previousVisit;
+  sequence.forEach((event,index)=>{
+    const visit=event.visit ?? event.bar;
+    const first=Math.floor(event.beat+1e-8), end=Math.ceil(event.beat+event.beats-1e-8);
+    songCells[index]=[];
+    for(let beat=first;beat<end;beat++){
+      if(visit!==previousVisit || beat!==previousBeat || !row){
+        row=element('div',null,'song-tab-row');
+        row.append(element('strong','Bar '+(event.bar+1)+' · Beat '+(beat+1),'song-beat-title'),staffLabels());
+        rows.append(row);
       }
-      row.append(col);
+      const col=tabColumn(index,beat>first);
+      col.dataset.beat=beat;
+      col.setAttribute('aria-label','Bar '+(event.bar+1)+', beat '+(beat+1)+', '+(beat>first?'continued ':'')+describe(event)[0]);
+      row.append(col);songCells[index].push(col);
+      previousVisit=visit;previousBeat=beat;
     }
-    staff.append(row);
-  }
-  if (sequence.length > songPageSize) {
-    const nav = element('div',null,'tab-navigation');
-    const back = element('button','← Previous'), forward = element('button','Next →');
-    back.disabled = !start;
-    forward.disabled = end === sequence.length;
-    back.onclick = ()=>seek(start-songPageSize);
-    forward.onclick = ()=>seek(end);
-    nav.append(back,element('span',(visit+1)+' / '+Math.ceil(sequence.length/songPageSize)),forward);
-    staff.append(nav);
+  });
+  staff.append(rows);
+  staff.scrollTop=0;
+}
+function paintSongBeat(beat,next){
+  const cells=songCells[cursor];
+  const current=cells.find(cell=>Number(cell.dataset.beat)===Math.floor(beat+1e-8)) || cells[0];
+  const upcoming=songCells[next]?.[0];
+  for(const col of highlighted){col.classList.remove('current','next');col.removeAttribute('aria-current')}
+  current.classList.add('current');current.setAttribute('aria-current','true');
+  highlighted=[current];
+  if(upcoming && upcoming!==current){upcoming.classList.add('next');highlighted.push(upcoming)}
+  const row=current.parentElement, staff=$('staff');
+  if(visibleBeatRow!==row){
+    const top=row.offsetTop, bottom=top+row.offsetHeight;
+    if(top<staff.scrollTop || bottom>staff.scrollTop+staff.clientHeight)staff.scrollTop=top;
+    visibleBeatRow=row;
   }
 }
 function drawNeck(event) {
@@ -168,9 +179,10 @@ function beatReadout(beat){
 function paint() {
   const event = sequence[cursor], next = nextIndex();
   const song=songLessons.has(active.id);
-  const visit=song ? Math.floor(cursor/songPageSize) : event.visit ?? event.bar;
+  const visit=song ? 'song' : event.visit ?? event.bar;
   if (barShown !== visit) {buildStaff(visit,song);barShown=visit;}
-  for (const col of $('staff').querySelectorAll('.tabcol')) {
+  if(song)paintSongBeat(event.beat,next);
+  else for (const col of $('staff').querySelectorAll('.tabcol')) {
     const i = Number(col.dataset.index);
     col.classList.toggle('current',i===cursor);
     col.classList.toggle('next',i===next);
@@ -276,6 +288,7 @@ async function play() {
     timeout=setTimeout(()=>{
       if(token!==generation)return;
       if(elapsed===0)paint();
+      else if(songCells.length)paintSongBeat(soundingBeat,nextIndex());
       $('count').textContent=beatReadout(soundingBeat);
       const step=Math.min(.5,event.beats-elapsed,Math.floor(soundingBeat+1+1e-8)-soundingBeat);
       elapsed+=step;
