@@ -19,7 +19,7 @@ const fingerCourse=(()=>{
   function button(title,fn){const b=el('button',title);b.type='button';b.onclick=fn;return b}
   function row(...nodes){const r=el('div',null,'fs-row');r.append(...nodes);return r}
   function section(title,fold=false){const s=el(fold?'details':'section',null,'surface');s.append(el(fold?'summary':'h2',title));body.append(s);return s}
-  function field(label,input){const l=el('label',label,'fs-field');l.append(input);return l}
+  function field(label,input){const l=el('label',label,'fs-field');input.setAttribute('aria-label',label);l.append(input);return l}
   function select(values,active,change){const s=el('select');for(const [value,title] of values){const o=el('option',title);o.value=value;s.append(o)}s.value=active;s.onchange=()=>change(s.value);return s}
   function count(title,obj,key,max){
     const out=el('strong');const show=()=>out.textContent=(obj[key]||0)+' / '+max;show();
@@ -195,7 +195,7 @@ const fingerCourse=(()=>{
     const s=section('Work on one phrase'),info=day(d);
     const suggested=d===27?5:d===26?4:[10,23].includes(d)?3:(d>=15&&d<=21)?2:[4,8,9,13,14].includes(d)?1:0;
     const input=el('input');input.placeholder='e.g. opening, bars 1–2';input.value=info.phrase||'';input.oninput=()=>{info.phrase=input.value;save()};
-    const pick=select(repertoire.map(n=>[n,n]),info.song||repertoire[suggested],v=>{info.song=v;info.reps=0;save();open(d,6)});
+    const pick=select(repertoire.map(n=>[n,n]),info.song||repertoire[suggested],v=>{info.song=v;info.reps=0;info.phrase='';save();document.dispatchEvent(new Event('leavepracticepage'));open(d,6)});
     s.append(field('Song',pick),field('Section or measure numbers',input),link('Open my arrangements in Songs','#songs'),el('p','Use your own tab or recording. Pick one or two measures. Find comfortable frets, assign P/I/M/A, then combine at half speed. Count five clean passes before adding a measure. If the same slip returns, isolate the two or three notes around it.'),count('Clean phrase passes',info,'reps',5));
     const record=section('My recordings',true);record.open=[7,14,21,28,30].includes(d);
     theoryCourse.recorder('fingerstyle-'+d,record);
@@ -209,7 +209,6 @@ const fingerCourse=(()=>{
     $('fingerTitle').textContent=b?blocks[b-1]:title;
     $('fingerKicker').textContent='Week '+(week(d)+1)+' · Day '+d+(b?' · '+title:' · '+weeks[week(d)]);
     if(!b){
-      const intro=section('Today’s focus');intro.append(el('p',assignment),field('Session length',select([30,40,60].map(n=>[n,n+' minutes']),state().length,v=>{state().length=Number(v);save();open(d)})));
       checklist(d);return;
     }
     body.append(link('← Day '+d+' checklist',route(d)),el('p',assignment,'hint'));

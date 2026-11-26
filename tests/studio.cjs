@@ -60,6 +60,7 @@ assert.equal(await page.getByLabel('Pattern',{exact:true}).locator('option:check
 await page.getByLabel('Pattern',{exact:true}).selectOption('1');
 assert.equal(await page.locator('#fingerBody .neck-cell.selected').count(),2);
 await page.goto(root+'#finger/30/5');
+await page.getByRole('heading',{name:'Find 20 positions'}).waitFor();
 for(let i=0;i<20;i++){
   const target=await page.evaluate(()=>store.fingerRoadmap.days[30].quiz.targets[store.fingerRoadmap.days[30].quiz.at]);
   await page.locator('#fingerBody .neck-cell[data-string="'+target.string+'"][data-fret="'+target.fret+'"]').click();
@@ -68,6 +69,7 @@ await page.getByText('20 / 20 correct (100%). Range complete.').waitFor();
 await page.getByRole('button',{name:'Try frets 1–8'}).click();
 assert.equal(await page.evaluate(()=>store.fingerRoadmap.days[30].quiz.limit),8);
 await page.goto(root+'#finger');
+await page.getByRole('heading',{name:'Your next session'}).waitFor();
 assert.equal(await page.locator('#fingerBody .fs-item').count(),30);
 // Theory has its own last session, notebook, recordings, and completion state.
 await page.setViewportSize({width:320,height:720});
