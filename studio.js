@@ -65,27 +65,64 @@ function token(event, string) {
   const marker = {'Hammer-on':'h','Pull-off':'p','Slide':event.from < position.fret ? '/' : '∖'}[event.action] || '';
   return (event.continuation ? '~' : '') + marker + position.fret + (event.action === 'Half-step bend' ? 'b½' : '');
 }
-function buildStaff(visit) {
-  const staff = $('staff');
-  const events = sequence.filter(e => (e.visit ?? e.bar) === visit);
-  staff.style.setProperty('--columns',events.length);
+const songRowSize = 8;
+const songPageSize = songRowSize * 2;
+function staffLabels() {
   const labels = element('div', null, 'staff-labels');
   for (const string of stringSymbols) labels.append(element('span', string));
-  staff.replaceChildren(labels);
-  for (const event of events) {
-    const index = sequence.indexOf(event);
-    const button = element('button', null, 'tabcol');
-    button.dataset.index = index;
-    button.setAttribute('aria-label', 'Beat ' + (event.beat+1) + ', ' + describe(event).join(', '));
-    for (let s=1;s<=6;s++) {
-      const line = element('span');
-      const mark = token(event,s);
-      if (mark) line.append(element('i',mark));
-      button.append(line);
+  return labels;
+}
+function tabColumn(index) {
+  const event = sequence[index];
+  const button = element('button', null, 'tabcol');
+  button.dataset.index = index;
+  button.setAttribute('aria-label', 'Beat ' + (event.beat+1) + ', ' + describe(event).join(', '));
+  for (let s=1;s<=6;s++) {
+    const line = element('span');
+    const mark = token(event,s);
+    if (mark) line.append(element('i',mark));
+    button.append(line);
+  }
+  button.append(element('small',event.action === 'Rest' ? 'rest' : Number.isInteger(event.beat) ? event.beat+1 : '&'));
+  button.onclick = () => seek(index, true);
+  return button;
+}
+function buildStaff(visit, song) {
+  const staff = $('staff');
+  staff.classList.toggle('song-staff',song);
+  staff.replaceChildren();
+  if (!song) {
+    const indices = [];
+    sequence.forEach((e,i)=>{if ((e.visit ?? e.bar) === visit) indices.push(i)});
+    staff.style.setProperty('--columns',indices.length);
+    staff.append(staffLabels(),...indices.map(tabColumn));
+    return;
+  }
+  const start = visit * songPageSize;
+  const end = Math.min(start + songPageSize,sequence.length);
+  for (let first = start; first < end; first += songRowSize) {
+    const row = element('div',null,'song-tab-row');
+    row.append(staffLabels());
+    for (let i = first; i < Math.min(first + songRowSize,end); i++) {
+      const col = tabColumn(i), event = sequence[i], prev = sequence[i-1];
+      if (i === first || event.bar !== prev.bar || event.visit !== prev.visit || event.beat === 0) {
+        col.classList.add('measure-start');
+        col.dataset.measure = event.bar + 1;
+        col.setAttribute('aria-label','Bar '+(event.bar+1)+', '+col.getAttribute('aria-label'));
+      }
+      row.append(col);
     }
-    button.append(element('small',event.action === 'Rest' ? 'rest' : Number.isInteger(event.beat) ? event.beat+1 : '&'));
-    button.onclick = () => seek(index, true);
-    staff.append(button);
+    staff.append(row);
+  }
+  if (sequence.length > songPageSize) {
+    const nav = element('div',null,'tab-navigation');
+    const back = element('button','← Previous'), forward = element('button','Next →');
+    back.disabled = !start;
+    forward.disabled = end === sequence.length;
+    back.onclick = ()=>seek(start-songPageSize);
+    forward.onclick = ()=>seek(end);
+    nav.append(back,element('span',(visit+1)+' / '+Math.ceil(sequence.length/songPageSize)),forward);
+    staff.append(nav);
   }
 }
 function drawNeck(event) {
@@ -130,14 +167,15 @@ function beatReadout(beat){
 }
 function paint() {
   const event = sequence[cursor], next = nextIndex();
-  const visit=event.visit ?? event.bar;
-  if (barShown !== visit) {buildStaff(visit);barShown=visit;}
-  for (const col of $('staff').querySelectorAll('button')) {
+  const song=songLessons.has(active.id);
+  const visit=song ? Math.floor(cursor/songPageSize) : event.visit ?? event.bar;
+  if (barShown !== visit) {buildStaff(visit,song);barShown=visit;}
+  for (const col of $('staff').querySelectorAll('.tabcol')) {
     const i = Number(col.dataset.index);
     col.classList.toggle('current',i===cursor);
     col.classList.toggle('next',i===next);
     col.setAttribute('aria-current',String(i===cursor));
-    if (i===cursor) {
+    if (i===cursor && !song) {
       const box=col.getBoundingClientRect(), scroll=$('staff').parentElement, boundary=scroll.getBoundingClientRect();
       if(box.right>boundary.right) scroll.scrollLeft += box.right-boundary.right+4;
       if(box.left<boundary.left) scroll.scrollLeft -= boundary.left-box.left+4;
