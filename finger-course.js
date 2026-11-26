@@ -38,6 +38,7 @@ const fingerCourse=(()=>{
     $('fingerTitle').textContent='Melodic fingerstyle';$('fingerKicker').textContent='30-day roadmap · Standard tuning';
     const course=section('Your next session');const d=nextDay();
     course.append(link('Day '+d+' · '+fingerDays[d-1][0],route(d),'start-link'));
+    const pdf=link('Printable 30-day roadmap','fingerstyle-roadmap.pdf');pdf.target='_blank';pdf.rel='noopener';const pdfRow=el('p');pdfRow.append(pdf);course.append(pdfRow);
     weeks.forEach((title,w)=>{const s=section('Week '+(w+1)+' · '+title,true);s.open=w===week(d);
       fingerDays.forEach(([name],i)=>{if(week(i+1)===w)s.append(link((state().days[i+1]?.done?'✓ ':'')+'Day '+(i+1)+' · '+name,route(i+1),'fs-item'))});
     });
@@ -56,6 +57,7 @@ const fingerCourse=(()=>{
   function demoChoices(d,b){
     if(b===1)return [P.picking()];
     if(b===2){
+      if(d===24)return ['Quiet','Moderate','Loud'].map((name,i)=>({name:name+' phrase',cue:'Play the same four notes at each volume. Keep the tempo steady and the attacks clear. Record two versions and compare.',division:1,bpm:50,steps:[0,1,3,1].map(f=>[{string:1,fret:f,duration:.9,volume:[.05,.12,.22][i]}])}));
       if(d===2)return [P.picking(false,true),P.picking()];
       if(d===10)return [P.picking(),P.picking(true)];
       if([3,4,12,24,25].includes(d))return [ ...(d===12||d===24?[P.balance]:d===25?[P.mute]:[]),P.pinch(2),P.pinch(3),P.pinch(4)];
@@ -89,7 +91,13 @@ const fingerCourse=(()=>{
     function paint(i){
       pos=i;const notes=pattern.steps[i];for(const c of cols)c.removeAttribute('aria-current');cols[i].setAttribute('aria-current','step');
       const c=cols[i];if(c.offsetLeft<tab.scrollLeft||c.offsetLeft+c.offsetWidth>tab.scrollLeft+tab.clientWidth)tab.scrollLeft=Math.max(0,c.offsetLeft-tab.clientWidth/3);
-      neck.cells.forEach(cell=>cell.classList.add('blank'));neck.cells.forEach(cell=>cell.classList.remove('selected'));
+      neck.cells.forEach(cell=>{cell.classList.add('blank');cell.classList.remove('selected','fs-held')});
+      for(let j=i-1;j>=Math.max(0,i-8);j--){
+        for(const n of pattern.steps[j]){
+          if(n.duration<=(i-j)/pattern.division || pattern.steps.slice(j+1,i+1).some(col=>col.some(v=>v.string===n.string)))continue;
+          const cell=neck.cellAt(n.string,n.fret);cell.classList.remove('blank');cell.classList.add('fs-held');cell.firstChild.textContent='Ring';
+        }
+      }
       for(const n of notes){const cell=neck.cellAt(n.string,n.fret);cell.classList.remove('blank');cell.classList.add('selected');cell.firstChild.textContent=picking(n.string)}
       if(notes.length)neck.reveal(notes[0].fret);
       readout.textContent=notes.map(n=>picking(n.string)+' · '+names[n.string-1]+' '+(n.fret?'fret '+n.fret:'open')+(n.left?' · fretting finger '+n.left:'')+(n.gesture?' · '+n.gesture:'')).join(' + ')||'Let the last notes ring';
@@ -132,14 +140,16 @@ const fingerCourse=(()=>{
       }
       schedule();display();
     }
-    const variantInput=select(choices.map((v,i)=>[i,v.name]),0,v=>{stop();variant=Number(v);pattern=choices[variant];draw()});
+    const reps=el('div');
+    function showCount(){const name=pattern.name,pinch=name.endsWith('strings together');reps.replaceChildren(count(pinch?'Clean plucks':'Clean passes',info,'clean-'+b+'-'+name,pinch?10:5))}
+    const variantInput=select(choices.map((v,i)=>[i,v.name]),0,v=>{stop();variant=Number(v);pattern=choices[variant];draw();showCount()});
     panel.append(field('Pattern',variantInput),cue,summary,tab,readout,neck.root);
     if(choices.every(p=>p.name.startsWith('Spider'))){const start=select([[1,'Fret 1'],[5,'Fret 5']],1,v=>{stop();choices.forEach((p,i)=>choices[i]=P.spider(p.name.split(' ')[1],Number(v)));pattern=choices[variant];draw()});panel.append(field('Hand position',start))}
     if(choices.some(p=>p.name.includes('strings together'))){panel.append(field('Thumb string for simultaneous plucks',select([[6,'Thick E'],[5,'A'],[4,'D']],6,v=>{stop();choices.forEach((p,i)=>{if(p.name.includes('strings together'))choices[i]=P.pinch(Number(p.name[0]),Number(v))});pattern=choices[variant];draw()})))}
     bpm.onchange=()=>{stop();bpm.value=Math.max(25,Math.min(180,Number(bpm.value)||pattern.bpm));info['tempo'+b]=Number(bpm.value);save()};
     panel.append(row(play,previous,next,button('Restart',()=>{stop();paint(0)})),row(field('Tempo (BPM)',bpm),field('Loop',loopBox)));
     const hidden=()=>{if(document.hidden)stop()};document.addEventListener('visibilitychange',hidden);
-    clean.push(()=>{stop();document.removeEventListener('visibilitychange',hidden)});draw();
+    panel.append(reps);showCount();clean.push(()=>{stop();document.removeEventListener('visibilitychange',hidden)});draw();
   }
   function navigationTest(d){
     const s=section('Find 20 positions'),data=day(d);
@@ -189,6 +199,9 @@ const fingerCourse=(()=>{
     s.append(field('Song',pick),field('Section or measure numbers',input),link('Open my arrangements in Songs','#songs'),el('p','Use your own tab or recording. Pick one or two measures. Find comfortable frets, assign P/I/M/A, then combine at half speed. Count five clean passes before adding a measure. If the same slip returns, isolate the two or three notes around it.'),count('Clean phrase passes',info,'reps',5));
     const record=section('My recordings',true);record.open=[7,14,21,28,30].includes(d);
     theoryCourse.recorder('fingerstyle-'+d,record);
+    if(d===14||d===21||d===30){
+      const previous=d===14?7:d===21?14:21;s.append(link('Hear my day '+previous+' recordings',route(previous,6)));
+    }
   }
   function open(d=0,b=0){
     leave();body.replaceChildren();if(!d){outline();return}
@@ -206,7 +219,7 @@ const fingerCourse=(()=>{
     }
     if(b<=4){player(d,b);if(d===5 && b===3)navigationTest(d);
       const reps=section('Check your playing');const pinch=b===2&&[3,4].includes(d);
-      reps.append(el('p',pinch?'Listen for one attack from all the strings. Reset your picking fingers between plucks.':'Play once without the guide. If a note buzzes, a bass beat moves or the hand tightens, slow down and repeat the smallest difficult group.'),count(pinch?'Clean plucks':'Clean passes',info,'clean'+b,pinch?10:5));
+      reps.append(el('p',pinch?'Listen for one attack from all the strings. Reset your picking fingers between plucks.':'Play once without the guide. If a note buzzes, a bass beat moves or the hand tightens, slow down and repeat the smallest difficult group.'));
     }else if(b===5)theory(d);else song(d);
     const done=button('Done · back to checklist',()=>{info.blocks[b]=true;save();location.hash=route(d)});done.className='primary';body.append(done);
   }

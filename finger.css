@@ -9,3 +9,4 @@
 #fingerBody .fs-col[aria-current]{background:var(--accent);color:var(--card)}#fingerBody .fs-hit{font-weight:800;color:var(--txt)}#fingerBody [aria-current] .fs-hit{color:inherit}
 #fingerBody .fs-label{position:sticky;left:0;z-index:1;background:var(--card);flex-basis:38px}.fs-col span{border-bottom:1px solid var(--line)}
 #fingerBody .fs-row button,#fingerBody summary{touch-action:manipulation}
+#fingerBody .fs-held .note-cap{outline:2px dashed #f5c47e;color:#fff0ce}
